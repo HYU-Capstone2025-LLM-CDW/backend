@@ -35,6 +35,18 @@ jobs:
           source: "./${{secrets.DOCKER_IMAGE_NAME}}_image.tar"
           target: "~/app"
 
+      - name: Create .env file
+        run: echo "${{ secrets.ENV_FILE }}" > ${{secrets.DOCKER_IMAGE_NAME}}.env
+
+      - name: Copy .env to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "./${{secrets.DOCKER_IMAGE_NAME}}.env"
+          target: "~/app"
+
       - name: SSH into EC2 and deploy
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -46,4 +58,4 @@ jobs:
             docker load -i ${{secrets.DOCKER_IMAGE_NAME}}_image.tar
             docker stop backend-app-container || true
             docker rm backend-app-container || true
-            docker run -d --name backend-app-container -p 8000:8000 ${{ secrets.DOCKER_IMAGE_NAME }}:${{ secrets.DOCKER_TAG || 'latest' }}
+            docker run --env-file ${{secrets.DOCKER_IMAGE_NAME}}.env -d --name backend-app-container -p 8000:8000 ${{ secrets.DOCKER_IMAGE_NAME }}:${{ secrets.DOCKER_TAG || 'latest' }}
