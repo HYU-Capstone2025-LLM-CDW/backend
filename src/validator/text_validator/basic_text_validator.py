@@ -30,24 +30,21 @@ class BasicTextValidator:
         self._validate_input_length(self.value)
         self._validate_allowed_chars(self.value)
 
-    def _validate_input_type(self, value):
+    def _validate_input_type(self):
         """
         입력 텍스트의 타입을 검증하는 메서드입니다.
         
         Args:
             value (str): 검증할 텍스트
-        
-        Returns:
-            value (str): 검증된 텍스트
             
         Raises:
             ValueError: 입력 텍스트가 문자열이 아닌 경우 발생합니다.
         """
-        if not isinstance(value, str):
+        
+        if not isinstance(self.value, str):
             raise ValueError("Input text must be a string")
-        return value
 
-    def _validate_input_length(self, value, min_len=5, max_len=500):
+    def _validate_input_length(self):
         """입력 텍스트의 길이를 검증하는 메서드입니다.
         
         Args:
@@ -55,26 +52,22 @@ class BasicTextValidator:
             min_len (int): 최소 길이  
             max_len (int): 최대 길이  
 
-        Returns: 
-            value (str): 검증된 텍스트
-            
         Raises:
             ValueError: 입력 텍스트의 길이가 min_len과 max_len 사이가 아닌 경우 발생합니다.
         """
         
-        if len(value) > max_len or len(value) < min_len:
+        MIN_LEN = 5
+        MAX_LEN = 500
+        
+        if not MIN_LEN <= len(self.value) <= MAX_LEN:
             raise ValueError("Input text must be between 5 and 500 characters")
-        return value
 
-    def _validate_allowed_chars(self, value):
+    def _validate_allowed_chars(self):
         """
         입력 텍스트의 허용된 문자를 검증하는 메서드입니다.
         
         Args:
             value (str): 검증할 텍스트
-        
-        Returns:
-            value (str): 검증된 텍스트
             
         Raises:
             ValueError: 입력 텍스트에 허용되지 않은 문자가 포함된 경우 발생합니다.
@@ -96,9 +89,8 @@ class BasicTextValidator:
             if re.search(r"(.)\1{2,}", s):
                 raise ValueError("Input text contains repeated symbols")
             
-        raise_if_control_chars(value)
-        raise_if_emoji(value)
-        raise_if_invalid_symbols(value)
-        raise_if_repeated_symbols(value)
+        raise_if_control_chars(self.value)
+        raise_if_emoji(self.value)
+        raise_if_invalid_symbols(self.value)
+        raise_if_repeated_symbols(self.value)
         
-        return value
