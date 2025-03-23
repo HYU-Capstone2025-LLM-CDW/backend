@@ -4,3 +4,11 @@ venv
 *.pyc
 __pycache__/
 .env
+.env.*
+*.pyo
+*.pyd
+*.log
+*.db
+.git
+.gitignore
+tests/
