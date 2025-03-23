@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, Field, field_validator
 
 from src.validator.text_validator.basic_text_validator import BasicTextValidator
+from validator.text_validator.secure_text_validator import SecureTextValidator
 
 
 class TextToSQLRequestDto(BaseModel):
@@ -11,6 +12,7 @@ class TextToSQLRequestDto(BaseModel):
     def validate_text(cls, value):
         try:
             BasicTextValidator(value).validate()
+            SecureTextValidator(value).validate()
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
             

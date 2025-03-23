@@ -2,15 +2,16 @@ import re
 
 class BasicTextValidator:
     """
-    입력 텍스트를 검증하는 기본 클래스입니다.
-
-    이 클래스는 텍스트의 타입, 길이, 허용된 문자 등을 검증합니다.
-
-    사용 예:
-    ```python
-    validator = BasicTextValidator("example text")
-    validator.validate()
-    ```
+    BasicTextValidator 클래스는 입력 텍스트의 기본 검증을 담당합니다.
+    
+    주요 검증 항목:
+    1. 입력 텍스트의 타입
+    2. 입력 텍스트의 길이
+    3. 허용된 문자
+    
+    메서드:
+    - __init__(self, value: str): 초기화 메서드
+    - validate(self): 검증 메서드를 호출하여 텍스트를 검증
     """
     
     def __init__(self, value):
