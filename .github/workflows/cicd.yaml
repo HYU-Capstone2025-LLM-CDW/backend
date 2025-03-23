@@ -43,7 +43,7 @@ jobs:
           script: |
             IMAGE=${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ secrets.DOCKER_TAG || 'latest' }}
             cd ~/app
-            docker stop backend-app-container || true
-            docker rm backend-app-container || true
-            docker pull $IMAGE
-            docker run --env-file ${{ secrets.DOCKER_IMAGE_NAME }}.env -d --restart always --name backend-app-container -p 8000:8000 $IMAGE
+            sudo docker stop backend-app-container || true
+            sudo docker rm backend-app-container || true
+            sudo docker pull $IMAGE
+            sudo docker run --env-file ${{ secrets.DOCKER_IMAGE_NAME }}.env -d --restart always --name backend-app-container -p 8000:8000 $IMAGE
