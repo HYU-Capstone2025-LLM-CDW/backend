@@ -42,7 +42,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             cd ~/app
-            docker load -i image.tar
+            docker load -i ${{secrets.DOCKER_IMAGE_NAME}}_image.tar
             docker stop app-container || true
             docker rm app-container || true
             docker run -d --name app-container -p 80:80 ${{ secrets.DOCKER_IMAGE_NAME }}:${{ secrets.DOCKER_TAG || 'latest' }}
