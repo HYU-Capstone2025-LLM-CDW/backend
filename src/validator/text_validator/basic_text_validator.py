@@ -1,0 +1,104 @@
+import re
+
+class BasicTextValidator:
+    """
+    입력 텍스트를 검증하는 기본 클래스입니다.
+
+    이 클래스는 텍스트의 타입, 길이, 허용된 문자 등을 검증합니다.
+
+    사용 예:
+    ```python
+    validator = BasicTextValidator("example text")
+    validator.validate()
+    ```
+    """
+    
+    def __init__(self, value):
+        self.value = value
+        
+    def validate(self):
+        """
+        입력 텍스트를 검증하는 메서드입니다.
+        
+        이 메서드는 입력 텍스트의 타입, 길이, 허용된 문자 등을 검증합니다.
+        
+        Raises:
+            ValueError: 입력 텍스트가 검증에 실패한 경우 발생합니다.
+        """
+        
+        self._validate_input_type(self.value)
+        self._validate_input_length(self.value)
+        self._validate_allowed_chars(self.value)
+
+    def _validate_input_type(self, value):
+        """
+        입력 텍스트의 타입을 검증하는 메서드입니다.
+        
+        Args:
+            value (str): 검증할 텍스트
+        
+        Returns:
+            value (str): 검증된 텍스트
+            
+        Raises:
+            ValueError: 입력 텍스트가 문자열이 아닌 경우 발생합니다.
+        """
+        if not isinstance(value, str):
+            raise ValueError("Input text must be a string")
+        return value
+
+    def _validate_input_length(self, value, min_len=5, max_len=500):
+        """입력 텍스트의 길이를 검증하는 메서드입니다.
+        
+        Args:
+            value (str): 검증할 텍스트  
+            min_len (int): 최소 길이  
+            max_len (int): 최대 길이  
+
+        Returns: 
+            value (str): 검증된 텍스트
+            
+        Raises:
+            ValueError: 입력 텍스트의 길이가 min_len과 max_len 사이가 아닌 경우 발생합니다.
+        """
+        
+        if len(value) > max_len or len(value) < min_len:
+            raise ValueError("Input text must be between 5 and 500 characters")
+        return value
+
+    def _validate_allowed_chars(self, value):
+        """
+        입력 텍스트의 허용된 문자를 검증하는 메서드입니다.
+        
+        Args:
+            value (str): 검증할 텍스트
+        
+        Returns:
+            value (str): 검증된 텍스트
+            
+        Raises:
+            ValueError: 입력 텍스트에 허용되지 않은 문자가 포함된 경우 발생합니다.
+        """
+        
+        def raise_if_control_chars(s):
+            if re.search(r"[\x00-\x1F\x7F]", s):
+                raise ValueError("Input text contains control characters")
+        
+        def raise_if_emoji(s):
+            if re.search(r"[\U00010000-\U0010FFFF]", s):
+                raise ValueError("Input text contains emoji")
+        
+        def raise_if_invalid_symbols(s):
+            if re.search(r"[^A-Za-z0-9가-힣\s.,!?%~()\-]", s):
+                raise ValueError("Input text contains invalid symbols")
+            
+        def raise_if_repeated_symbols(s: str) -> bool:
+            if re.search(r"(.)\1{2,}", s):
+                raise ValueError("Input text contains repeated symbols")
+            
+        raise_if_control_chars(value)
+        raise_if_emoji(value)
+        raise_if_invalid_symbols(value)
+        raise_if_repeated_symbols(value)
+        
+        return value
