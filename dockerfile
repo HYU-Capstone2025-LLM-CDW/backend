@@ -1,5 +1,5 @@
 # Stage 1: Build with dependencies
-FROM python:3.11.11 AS builder
+FROM python:3.11.11-slim AS builder
 
 WORKDIR /app
 
