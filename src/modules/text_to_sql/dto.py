@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel, Field, field_validator
 
 from src.validator.text_validator.basic_text_validator import BasicTextValidator
-from validator.text_validator.secure_text_validator import SecureTextValidator
+from src.validator.text_validator.secure_text_validator import SecureTextValidator
 
 
 class TextToSQLRequestDto(BaseModel):

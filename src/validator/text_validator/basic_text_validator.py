@@ -27,9 +27,9 @@ class BasicTextValidator:
             ValueError: 입력 텍스트가 검증에 실패한 경우 발생합니다.
         """
         
-        self._validate_input_type(self.value)
-        self._validate_input_length(self.value)
-        self._validate_allowed_chars(self.value)
+        self._validate_input_type()
+        self._validate_input_length()
+        self._validate_allowed_chars()
 
     def _validate_input_type(self):
         """

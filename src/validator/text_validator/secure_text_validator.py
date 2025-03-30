@@ -1,6 +1,6 @@
 import re
 import urllib.parse
-import bleach
+from html_sanitizer import Sanitizer
 
 
 class SecureTextValidator:
@@ -18,6 +18,7 @@ class SecureTextValidator:
     """
     def __init__(self, value: str):
         self.value = value
+        self.sanitizer = Sanitizer()
 
     
     def validate(self):
@@ -63,7 +64,7 @@ class SecureTextValidator:
         Raises:
             ValueError: 입력 텍스트에 XSS 공격 패턴이 포함된 경우 발생합니다.
         """
-        cleaned = bleach.clean(self.value, tags=[], attributes={}, styles=[], strip=True)
+        cleaned = self.sanitizer.sanitize(self.value)
         if cleaned != self.value:
             raise ValueError("Input text contains XSS attack patterns")
 
