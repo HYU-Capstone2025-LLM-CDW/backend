@@ -7,4 +7,4 @@ router = APIRouter(prefix="/sql-generator", tags=["sql-generator"])
 
 @router.post("/")
 async def text_to_sql(body: SqlGeneratorRequestDto):
-    return sql_generator_service.convert_text_to_sql(body)
+    return sql_generator_service.generate(body)

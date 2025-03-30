@@ -1,8 +1,10 @@
+from typing import Optional
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, field_validator
 
 from src.validator.text_validator.basic_text_validator import BasicTextValidator
 from src.validator.text_validator.secure_text_validator import SecureTextValidator
+from src.validator.sql_validator.basic_sql_validator import BasicSQLValidator
 
 
 class SqlGeneratorRequestDto(BaseModel):
@@ -19,8 +21,5 @@ class SqlGeneratorRequestDto(BaseModel):
         return value
     
 class SqlGeneratorResponseDto(BaseModel):
-    sql: str
-    
-    @field_validator("sql")
-    def validate_sql(cls, value):
-        pass
+    sql: Optional[str] = Field(None, title="SQL", description="The generated SQL")
+    error: Optional[str] = Field(None, title="Error", description="The error message if an error occurred")
