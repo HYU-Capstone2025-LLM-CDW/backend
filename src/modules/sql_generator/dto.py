@@ -5,7 +5,7 @@ from src.validator.text_validator.basic_text_validator import BasicTextValidator
 from src.validator.text_validator.secure_text_validator import SecureTextValidator
 
 
-class TextToSQLRequestDto(BaseModel):
+class SqlGeneratorRequestDto(BaseModel):
     text: str = Field(..., title="Text to convert to SQL", description="The text to convert to SQL")
     
     @field_validator("text")
@@ -18,6 +18,9 @@ class TextToSQLRequestDto(BaseModel):
             
         return value
     
-class TextToSQLResponseDto(BaseModel):
+class SqlGeneratorResponseDto(BaseModel):
     sql: str
     
+    @field_validator("sql")
+    def validate_sql(cls, value):
+        pass
