@@ -4,3 +4,7 @@ from src.modules.sql_generator.router import router as sql_generator_router
 app = FastAPI()
 
 app.include_router(sql_generator_router)
+
+@app.get("/", response_model=dict)
+def health_check():
+    return {"status": "ok"}
