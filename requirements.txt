@@ -7,6 +7,6 @@ html-sanitizer==2.5.0
 uvicorn==0.34.0
 unstructured==0.17.2
 markdown==3.7
-faiss-cpu
-numpy
-sentence-transformers
+faiss-cpu==1.10.0
+numpy==2.2.4
+sentence-transformers==4.0.1
