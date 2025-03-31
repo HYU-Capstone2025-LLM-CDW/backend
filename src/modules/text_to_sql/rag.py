@@ -3,7 +3,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 
 
-# 임베딩 모델 로드, 영어 지원원
+# 임베딩 모델 로드, 영어 지원
 _embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # 추후 search_history(LOG), data set 등 에서 불러오는 작업 필요
