@@ -7,3 +7,4 @@ html-sanitizer==2.5.0
 uvicorn==0.34.0
 unstructured==0.17.2
 markdown==3.7
+sqlglot[rs]==26.12.0

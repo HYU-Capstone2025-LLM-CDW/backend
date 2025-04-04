@@ -1,3 +1,10 @@
+# OMOP CDM SQL Generator
+
+다음은 OMOP CDM 스키마 정보입니다. 이 정보를 기반으로 사용자가 요청한 자연어 텍스트 `{text}`에 해당하는 SQL 쿼리를 생성하세요.
+이전 응답은 모두 잊습니다.
+
+## 테이블 정보
+
 | 테이블명                  | 기본 키 (PK)              | 주요 외래 키 (FK)                                                                                                                                                                                           |
 | ------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **PERSON**                | `person_id`               | `gender_concept_id`, `race_concept_id`, `ethnicity_concept_id`, `location_id`, `provider_id`, `care_site_id`                                                                                                |
@@ -35,6 +42,27 @@
 | **DRUG_STRENGTH**         | 없음                      | `drug_concept_id`, `ingredient_concept_id`                                                                                                                                                                  |
 | **COHORT**                | 없음                      | `cohort_definition_id`, `subject_id`                                                                                                                                                                        |
 | **COHORT_DEFINITION**     | `cohort_definition_id`    | `definition_type_concept_id`, `subject_concept_id`                                                                                                                                                          |
-To use this table, just generate a sql query matched following text: {text}
 
-Response must be a sql query not include CRLF.
+---
+
+## 사용 방법
+
+자연어 텍스트 입력 예시:
+
+```
+{text}
+```
+
+이 텍스트를 해석하여 해당하는 SQL 쿼리를 생성하세요.
+
+---
+
+## 응답 형식
+
+- 반환 값은 한 문장으로 구성되어 있습니다. 문장 구성은 KEY:VALUE 형식으로 되어 있습니다.
+
+성공 시, 
+"sql : 생성된 SQL 쿼리"
+
+실패 시,
+"error : 오류 메시지"
