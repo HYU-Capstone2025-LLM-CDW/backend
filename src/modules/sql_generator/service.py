@@ -1,10 +1,9 @@
 from functools import lru_cache
-from pprint import pprint
 from src.modules.sql_generator.dto import SqlGeneratorRequestDto, SqlGeneratorResponseDto
 from src.modules.gemini import service as gemini_service
 from langchain_community.document_loaders import UnstructuredMarkdownLoader
 
-# @lru_cache()
+@lru_cache()
 def _get_prompt() -> str:
     loader = UnstructuredMarkdownLoader("src/modules/sql_generator/prompt.md")
     data = loader.load()
