@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Create .env file
-        run: echo "${{ secrets.ENV_FILE }}" > ${{ secrets.DOCKER_IMAGE_NAME }}.env
+        run: echo '${{ secrets.ENV_FILE }}' > ${{ secrets.DOCKER_IMAGE_NAME }}.env
 
       - name: Pull and Run Container
         run: |
