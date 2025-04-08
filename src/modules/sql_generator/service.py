@@ -5,7 +5,7 @@ from langchain_community.document_loaders import UnstructuredMarkdownLoader
 
 @lru_cache()
 def _get_prompt() -> str:
-    loader = UnstructuredMarkdownLoader("src/modules/sql_generator/prompt.md")
+    loader = UnstructuredMarkdownLoader("src/modules/sql_generator/llm_prompt.md")
     data = loader.load()
     
     return data[0].page_content
