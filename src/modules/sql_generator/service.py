@@ -1,10 +1,12 @@
 import faiss
 import numpy as np
+
 from functools import lru_cache
 from src.modules.sql_generator.dto import SqlGeneratorRequestDto, SqlGeneratorResponseDto
 from src.modules.gemini import service as gemini_service
 from langchain_community.document_loaders import UnstructuredMarkdownLoader
 from sentence_transformers import SentenceTransformer
+
 @lru_cache()
 def _get_prompt() -> str:
     loader = UnstructuredMarkdownLoader("src/modules/sql_generator/prompt.md")
