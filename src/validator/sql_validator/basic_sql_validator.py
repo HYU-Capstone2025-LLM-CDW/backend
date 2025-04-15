@@ -42,6 +42,7 @@ class BasicSQLValidator:
         self._validate_allowed_columns()
         self._check_forbidden_dml()
         self._check_forbidden_ddl()
+        self._validate_allowed_keywords()
         
     def _validate_allowed_tables(self) -> None:
         """
@@ -108,5 +109,7 @@ class BasicSQLValidator:
             raise ValueError("허용되지 않은 DDL 명령어(CREATE, DROP, ALTER, TRUNCATE)가 포함되어 있습니다.")
     
     def _validate_allowed_keywords(self):
-        pass
-    
+        
+        for select_all in self.ast.find_all(exp.Select):
+            if select_all.name != "*":
+                raise ValueError(f"허용되지 않은 키워드 사용: {select_all.name}")
