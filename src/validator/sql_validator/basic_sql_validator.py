@@ -102,7 +102,7 @@ class BasicSQLValidator:
         Raises:
             ValueError: DDL 명령어가 포함되어 있으면 예외 발생합니다.
         """
-        ddl_expressions = (exp.Create, exp.Drop, exp.Alter, exp.Truncate)
+        ddl_expressions = (exp.Create, exp.Drop, exp.Alter, exp.TruncateTable)
 
         if isinstance(self.ast, ddl_expressions):
             raise ValueError("허용되지 않은 DDL 명령어(CREATE, DROP, ALTER, TRUNCATE)가 포함되어 있습니다.")
