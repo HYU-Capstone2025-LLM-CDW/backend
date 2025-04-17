@@ -1,0 +1,20 @@
+- List all female patients born after 2010
+- Retrieve deceased patients with their date and cause of death
+- Find patients diagnosed with hypertension
+- List patients prescribed insulin
+- Get body temperature measurements in 2020
+- Identify visits longer than 7 days
+- List procedures performed in 2021
+- Find patients with an observation period longer than 1 year
+- List device exposures with no end date
+- Count visits per care site
+- Find patients with a recorded race concept
+- Get all drug exposures for a specific visit
+- List all patients who received any procedure
+- List measurements with values outside normal range
+- Retrieve all condition occurrences with a status concept
+- List patients with more than 1 drug exposure
+- Get visits started in January 2022
+- Find average duration of visits
+- List patients who have both drug and procedure records
+- Retrieve all patients with any measurement of systolic blood pressure
