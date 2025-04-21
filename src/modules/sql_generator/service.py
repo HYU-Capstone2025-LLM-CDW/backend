@@ -1,5 +1,6 @@
 import faiss
 import numpy as np
+import os
 
 from functools import lru_cache
 from src.modules.sql_generator.dto import SqlGeneratorRequestDto, SqlGeneratorResponseDto
@@ -23,10 +24,10 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
     
     # Example 이 존재할 때만 예시 추가
     if example:
-        prompt += "\n There are some few examples \n"
+        prompt += "\n There is one example \n"
         prompt += "\n".join(example)
         prompt += "\n Please answer the questions based on the reference documents above."
-
+    print(prompt)
     result = model_service.generate_response(prompt, sqlGeneratorRequestDto)
     content = result.content
     
@@ -41,25 +42,39 @@ def _rag_init():
     # 임베딩 모델 로드, 영어 지원
     embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
     
+    # file_names
+    file_path = "src/modules/sql_generator/"
+    query_file = "query_example.md"
+    sql_file = "sql_example.md"
+    index_file = "query_index.faiss"
+    
     # 추후 search_history(LOG), data set 등 에서 불러오는 작업 필요
     query_list = []
     
-    with open("src/modules/sql_generator/query_example.md", 'r', encoding='utf-8') as file:
+    with open(file_path + query_file, 'r', encoding='utf-8') as file:
         for line in file:
             query_list.append(line.strip())
     
     
     sql_list = [] 
-    with open("src/modules/sql_generator/sql_example.md", 'r', encoding='utf-8') as file:
+    with open(file_path + sql_file, 'r', encoding='utf-8') as file:
         content = file.read()
         
     sql_list = [q.strip() for q in content.split(';') if q.strip()]
     
-    # Vector DB(_query_index) 생성, 현재는 서버를 실행할 때 생성함
-    query_index = faiss.IndexFlatL2(embedding_model.get_sentence_embedding_dimension())
+    # Vector DB 불러오기 없을 시 새로 생성
+    index_path = file_path + index_file
+    if os.path.exists(index_path):
+        query_index = faiss.read_index(index_path)
+    
+    # Vector DB(_query_index)
+    else :
+        query_index = faiss.IndexFlatL2(embedding_model.get_sentence_embedding_dimension())
 
-    # _query_list 를 vector 화 시켜서  vector DB 에 추가
-    query_index.add(np.array(embedding_model.encode(query_list)))
+        # _query_list 를 vector 화 시켜서  vector DB 에 추가
+        query_index.add(np.array(embedding_model.encode(query_list)))
+        faiss.write_index(query_index, index_path)
+    
     
     return embedding_model, query_list, sql_list, query_index
 
