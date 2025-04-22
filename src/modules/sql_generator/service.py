@@ -27,7 +27,7 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
         prompt += "\n There is one example \n"
         prompt += "\n".join(example)
         prompt += "\n Please answer the questions based on the reference documents above."
-    print(prompt)
+
     result = model_service.generate_response(prompt, sqlGeneratorRequestDto)
     content = result.content
     
