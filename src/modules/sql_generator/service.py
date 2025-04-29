@@ -1,5 +1,7 @@
 import faiss
 import numpy as np
+import os
+import logging
 
 from functools import lru_cache
 from src.modules.sql_generator.dto import SqlGeneratorRequestDto, SqlGeneratorResponseDto
@@ -30,10 +32,15 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
     result = model_service.generate_response(prompt, sqlGeneratorRequestDto)
     content = result.content
     
-    return SqlGeneratorResponseDto(
+    sqlGeneratorResponseDto = SqlGeneratorResponseDto(
         sql=content.get("sql"),
         error=content.get("error")
     )
+    
+    # LOG 저장
+    log_sql_generator(sqlGeneratorRequestDto, sqlGeneratorResponseDto)
+    
+    return sqlGeneratorResponseDto
 
 """ RAG(Retrieval-Augmented Generation) """ 
 
@@ -61,3 +68,59 @@ def _add_relevant_query(query: str, top_k: int = 1) -> list[str]:
     # 현재는 유사하다고 판단되는 example 을 top_k 만큼 보내는 형식
     # 유사한 정도인 distance 는 사용하지 않고 있으나 추후 최소치 같은 방법으로 사용할 수도 있음.
     return [(f"query : {_query_list[i]}, sql : {_sql_list[i]}") for i in indices[0]]
+
+
+""" SQL GENERATOR LOG """
+
+def _logger_init():
+    log_file = "sql_generator.log"
+    
+    log_format = (
+        '%(asctime)s - %(levelname)s - '
+        'Email: %(email)s, '
+        'Status: %(status)s, '
+        'Query: %(query)s, '
+        'SQL: %(sql)s, '
+        'Error: %(error_message)s'
+    )
+    
+    logger = logging.getLogger('sql_generator_logger')
+    logger.setLevel(logging.INFO)
+    
+    file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
+    file_handler.setLevel(logging.INFO)
+    
+    formatter = logging.Formatter(log_format)
+    
+    file_handler.setFormatter(formatter)    
+    logger.addHandler(file_handler)
+
+    return logger
+
+_logger = _logger_init()
+
+def log_sql_generator(sqlGeneratorRequestDto: SqlGeneratorRequestDto, sqlGeneratorResponseDto : SqlGeneratorResponseDto):
+    
+    email = "test@abc.com" # sqlGeneratorRequestDto.email
+    query = sqlGeneratorRequestDto.text
+    sql   = sqlGeneratorResponseDto.sql
+    error = sqlGeneratorResponseDto.error
+    
+    data = {    
+        'email': email if email is not None else '',
+        'query': query if query is not None else '',
+        'sql': sql if sql is not None else '',
+        'status' : None,
+        'error_message': error if error is not None else ''
+    }
+    
+    # Error 여부에 따라 변경
+    if error is None:
+        data['status'] = 'success'
+        data['error_message'] = 'None'
+        _logger.info("SQL Generator EVENT", extra=data)
+    
+    else :
+        data['status'] = 'failure'
+        _logger.error("SQL Generator EVENT", extra=data)
+    
