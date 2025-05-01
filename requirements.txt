@@ -11,3 +11,4 @@ sqlglot[rs]==26.12.0
 faiss-cpu==1.10.0
 numpy==2.2.4
 sentence-transformers==4.0.1
+sqlalchemy==2.0.40
