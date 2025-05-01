@@ -31,15 +31,14 @@ services:
     ports:
       - "8000:8000"
     environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
       DATABASE_URL: ${DATABASE_URL}
       # Pass individual components if needed by entrypoint script or alembic
-      DB_HOST: postgres
-      DB_PORT: 5432
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - .:/app # Mount current directory for development hot-reloading (optional for prod)
     networks:
       - omop-network
     depends_on:
