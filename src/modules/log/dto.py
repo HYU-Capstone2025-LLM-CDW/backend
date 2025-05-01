@@ -8,7 +8,7 @@ from sqlalchemy.sql import func
 # sqlAlchemy Model 정의
 base = declarative_base()
 
-class LogSqlGeneratorRequestDto(base):
+class LogSqlGeneratorRequestModel(base):
     
     __tablename__ = "sql_generator_log"
     
@@ -27,3 +27,4 @@ class LogSqlGeneratorRequestDto(base):
     sql_validation_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     post_llm_filter_complete_timestamp: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     llm_model_used: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    

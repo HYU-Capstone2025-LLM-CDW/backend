@@ -8,7 +8,7 @@ from src.modules.gemini import service as gemini_service
 from sentence_transformers import SentenceTransformer
 from src.modules.omop import service as omop_service
 
-from src.modules.log.dto import LogSqlGeneratorRequestDto
+from src.modules.log.dto import LogSqlGeneratorRequestModel
 from src.modules.log.service import save_sql_generator_log
 
 
@@ -33,16 +33,17 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
             sql=content.get("sql"),
             error=content.get("error")
         )
-    
-    # Save Log
-    finally:
-        save_sql_generator_log(LogSqlGeneratorRequestDto(
+
+        save_sql_generator_log(LogSqlGeneratorRequestModel(
             user_input_text = sqlGeneratorRequestDto.text,
             generated_sql = sqlGeneratorResponseDto.sql
         ))
-    
-    
-    return sqlGeneratorResponseDto
+      
+        return sqlGeneratorResponseDto
+
+    except Exception as e:
+        print(e)
+
 
 """ RAG(Retrieval-Augmented Generation) """ 
 

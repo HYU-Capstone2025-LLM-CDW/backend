@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.modules.log.dto import LogSqlGeneratorRequestDto, base
+from src.modules.log.dto import LogSqlGeneratorRequestModel, base
 from src.config import settings
 
 # PostgreSQL 연결 설정
@@ -19,7 +19,7 @@ def create_sql_generator_table():
 
 create_sql_generator_table()
 
-def save_sql_generator_log (db_log : LogSqlGeneratorRequestDto):
+def save_sql_generator_log (db_log : LogSqlGeneratorRequestModel):
     db = _session_local()
     
     try:    
