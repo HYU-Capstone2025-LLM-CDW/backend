@@ -3,25 +3,17 @@ import numpy as np
 import os
 import logging
 
-from functools import lru_cache
 from src.modules.sql_generator.dto import SqlGeneratorRequestDto, SqlGeneratorResponseDto
 from src.modules.gemini import service as gemini_service
-from langchain_community.document_loaders import UnstructuredMarkdownLoader
 from sentence_transformers import SentenceTransformer
-
-@lru_cache()
-def _get_prompt() -> str:
-    loader = UnstructuredMarkdownLoader("src/modules/sql_generator/prompt.md")
-    data = loader.load()
-    
-    return data[0].page_content
+from src.modules.omop import service as omop_service
     
 def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResponseDto:
     model_service = gemini_service
-    prompt = _get_prompt()
+    prompt = omop_service.get_prompt()
     
     #RAG를 사용한 Example 을 반영하는 코드
-    example = _add_relevant_query(sqlGeneratorRequestDto.text)
+    example = None # _add_relevant_query(sqlGeneratorRequestDto.text)
     
     # Example 이 존재할 때만 예시 추가
     if example:
