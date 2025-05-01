@@ -15,10 +15,10 @@ jobs:
       - name: Checkout code (if needed)
         uses: actions/checkout@v4
 
-      - name: Prepare temporary Docker config (to avoid macOS Keychain)
+      - name: Prepare temporary Docker config (disable keychain helper)
         run: |
           mkdir -p /tmp/docker-config
-          echo '{}' > /tmp/docker-config/config.json
+          echo '{ "credsStore": "none" }' > /tmp/docker-config/config.json
 
       - name: Docker Login (No Keychain)
         run: |
