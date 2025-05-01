@@ -31,7 +31,7 @@ jobs:
         run: |
           COMPOSE_FILE_PATH="./docker-compose.yaml"
           ENV_FILE_PATH="./.env"               
-          APP_SERVICE_NAME="backend"           
+          APP_SERVICE_NAME="fastapi"           
 
           docker compose -f $COMPOSE_FILE_PATH --env-file $ENV_FILE_PATH pull $APP_SERVICE_NAME
           docker compose -f $COMPOSE_FILE_PATH --env-file $ENV_FILE_PATH up -d --no-deps $APP_SERVICE_NAME
