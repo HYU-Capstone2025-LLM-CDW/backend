@@ -15,13 +15,22 @@ jobs:
       - name: Create .env file
         run: echo '${{ secrets.ENV_FILE }}' > ${{ secrets.DOCKER_IMAGE_NAME }}.env
 
+      - name: Stop and Remove Existing Container
+        run: |
+          CONTAINER_NAME=backend-app-container
+          docker stop $CONTAINER_NAME || true
+          docker rm $CONTAINER_NAME || true
+
+      - name: Delete Unused Docker Images
+        run: |
+          IMAGE=${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ secrets.DOCKER_TAG || 'latest' }}
+          docker rmi $IMAGE || true
+
       - name: Pull and Run Container
         run: |
           IMAGE=${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ secrets.DOCKER_TAG || 'latest' }}
           CONTAINER_NAME=backend-app-container
-
-          docker stop $CONTAINER_NAME || true
-          docker rm $CONTAINER_NAME || true
+          
           docker pull $IMAGE
 
           docker run --env-file ${{ secrets.DOCKER_IMAGE_NAME }}.env \
