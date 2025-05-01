@@ -7,30 +7,40 @@ from src.modules.sql_generator.dto import SqlGeneratorRequestDto, SqlGeneratorRe
 from src.modules.gemini import service as gemini_service
 from sentence_transformers import SentenceTransformer
 from src.modules.omop import service as omop_service
-    
-def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResponseDto:
-    model_service = gemini_service
-    prompt = omop_service.get_prompt()
-    
-    #RAG를 사용한 Example 을 반영하는 코드
-    example = None # _add_relevant_query(sqlGeneratorRequestDto.text)
-    
-    # Example 이 존재할 때만 예시 추가
-    if example:
-        prompt += "\n There are some few examples \n"
-        prompt += "\n".join(example)
-        prompt += "\n Please answer the questions based on the reference documents above."
 
-    result = model_service.generate_response(prompt, sqlGeneratorRequestDto)
-    content = result.content
+from src.modules.log.dto import LogSqlGeneratorRequestDto
+from src.modules.log.service import save_sql_generator_log
+
+
+def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResponseDto:
+    try:
+        model_service = gemini_service
+        prompt = omop_service.get_prompt()
+        
+        #RAG를 사용한 Example 을 반영하는 코드
+        example = None # _add_relevant_query(sqlGeneratorRequestDto.text)
+        
+        # Example 이 존재할 때만 예시 추가
+        if example:
+            prompt += "\n There are some few examples \n"
+            prompt += "\n".join(example)
+            prompt += "\n Please answer the questions based on the reference documents above."
+
+        result = model_service.generate_response(prompt, sqlGeneratorRequestDto)
+        content = result.content
+        
+        sqlGeneratorResponseDto = SqlGeneratorResponseDto(
+            sql=content.get("sql"),
+            error=content.get("error")
+        )
     
-    sqlGeneratorResponseDto = SqlGeneratorResponseDto(
-        sql=content.get("sql"),
-        error=content.get("error")
-    )
+    # Save Log
+    finally:
+        save_sql_generator_log(LogSqlGeneratorRequestDto(
+            user_input_text = sqlGeneratorRequestDto.text,
+            generated_sql = sqlGeneratorResponseDto.sql
+        ))
     
-    # LOG 저장
-    log_sql_generator(sqlGeneratorRequestDto, sqlGeneratorResponseDto)
     
     return sqlGeneratorResponseDto
 
