@@ -16,7 +16,7 @@ jobs:
         run: echo '${{ secrets.ENV_FILE }}' > .env
 
       - name: Docker Compose Up (local build)
-        run: docker compose --env-file .env up -d
+        run: docker compose --env-file .env up -d --build
 
       - name: Clean up unused images (optional)
         run: docker image prune -af
