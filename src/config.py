@@ -10,6 +10,14 @@ class _Settings(BaseSettings):
     db_host : str
     db_port : str
     
+    postgres_user: str
+    postgres_password: str
+    postgres_db: str
+    
+    database_url: str = ""
+    db_host: str
+    db_port: int
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

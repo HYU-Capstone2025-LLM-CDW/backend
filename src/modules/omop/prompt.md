@@ -1,68 +1,290 @@
-# OMOP CDM SQL Generator
+You are a clinical data SQL expert.
 
-다음은 OMOP CDM 스키마 정보입니다. 이 정보를 기반으로 사용자가 요청한 자연어 텍스트 `{text}`에 해당하는 SQL 쿼리를 생성하세요.
-이전 응답은 모두 잊습니다.
+Your job is to convert a Korean-language epidemiological question into a SQL query  
+that follows the OMOP Common Data Model using PostgreSQL syntax.
 
-## 테이블 정보
+- Return your response in the following format only:  
+If SQL is successfully generated:  
+`sql: <your_sql_query_here>`  
 
-| 테이블명                  | 기본 키 (PK)              | 주요 외래 키 (FK)                                                                                                                                                                                           |
-| ------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **PERSON**                | `person_id`               | `gender_concept_id`, `race_concept_id`, `ethnicity_concept_id`, `location_id`, `provider_id`, `care_site_id`                                                                                                |
-| **OBSERVATION_PERIOD**    | `observation_period_id`   | `person_id`, `period_type_concept_id`                                                                                                                                                                       |
-| **VISIT_OCCURRENCE**      | `visit_occurrence_id`     | `person_id`, `visit_concept_id`, `provider_id`, `care_site_id`, `visit_type_concept_id`, `admitted_from_concept_id`, `discharge_to_concept_id`, `preceding_visit_occurrence_id`                             |
-| **VISIT_DETAIL**          | `visit_detail_id`         | `person_id`, `visit_occurrence_id`, `provider_id`, `care_site_id`, `visit_detail_concept_id`, `admitted_from_concept_id`, `discharged_to_concept_id`, `preceding_visit_detail_id`, `parent_visit_detail_id` |
-| **CONDITION_OCCURRENCE**  | `condition_occurrence_id` | `person_id`, `condition_concept_id`, `condition_type_concept_id`, `condition_status_concept_id`, `provider_id`, `visit_occurrence_id`, `visit_detail_id`                                                    |
-| **DRUG_EXPOSURE**         | `drug_exposure_id`        | `person_id`, `drug_concept_id`, `drug_type_concept_id`, `provider_id`, `visit_occurrence_id`, `visit_detail_id`                                                                                             |
-| **PROCEDURE_OCCURRENCE**  | `procedure_occurrence_id` | `person_id`, `procedure_concept_id`, `procedure_type_concept_id`, `provider_id`, `visit_occurrence_id`, `visit_detail_id`                                                                                   |
-| **DEVICE_EXPOSURE**       | `device_exposure_id`      | `person_id`, `device_concept_id`, `device_type_concept_id`, `provider_id`, `visit_occurrence_id`, `visit_detail_id`                                                                                         |
-| **MEASUREMENT**           | `measurement_id`          | `person_id`, `measurement_concept_id`, `measurement_type_concept_id`, `unit_concept_id`, `provider_id`, `visit_occurrence_id`, `visit_detail_id`                                                            |
-| **OBSERVATION**           | `observation_id`          | `person_id`, `observation_concept_id`, `observation_type_concept_id`, `provider_id`, `visit_occurrence_id`, `visit_detail_id`                                                                               |
-| **DEATH**                 | `person_id`               | `death_type_concept_id`, `cause_concept_id`                                                                                                                                                                 |
-| **NOTE**                  | `note_id`                 | `person_id`, `note_type_concept_id`, `note_class_concept_id`, `provider_id`, `visit_occurrence_id`, `visit_detail_id`                                                                                       |
-| **SPECIMEN**              | `specimen_id`             | `person_id`, `specimen_concept_id`, `unit_concept_id`, `anatomic_site_concept_id`, `disease_status_concept_id`                                                                                              |
-| **COST**                  | `cost_id`                 | `cost_type_concept_id`, `currency_concept_id`, `drug_concept_id`                                                                                                                                            |
-| **PAYER_PLAN_PERIOD**     | `payer_plan_period_id`    | `person_id`                                                                                                                                                                                                 |
-| **DRUG_ERA**              | `drug_era_id`             | `person_id`, `drug_concept_id`                                                                                                                                                                              |
-| **CONDITION_ERA**         | `condition_era_id`        | `person_id`, `condition_concept_id`                                                                                                                                                                         |
-| **EPISODE**               | `episode_id`              | `person_id`, `episode_concept_id`, `episode_object_concept_id`, `episode_type_concept_id`                                                                                                                   |
-| **DOSE_ERA**              | `dose_era_id`             | `person_id`, `drug_concept_id`, `unit_concept_id`                                                                                                                                                           |
-| **CDM_SOURCE**            | 없음                      | `cdm_version_concept_id`                                                                                                                                                                                    |
-| **CARE_SITE**             | `care_site_id`            | `place_of_service_concept_id`, `location_id`                                                                                                                                                                |
-| **LOCATION**              | `location_id`             | `country_concept_id`                                                                                                                                                                                        |
-| **PROVIDER**              | `provider_id`             | `care_site_id`, `specialty_concept_id`, `gender_concept_id`                                                                                                                                                 |
-| **FACT_RELATIONSHIP**     | 없음                      | `domain_concept_id_1`, `fact_id_1`, `domain_concept_id_2`, `fact_id_2`, `relationship_id`                                                                                                                   |
-| **RELATIONSHIP**          | `relationship_id`         | `relationship_concept_id`                                                                                                                                                                                   |
-| **CONCEPT**               | `concept_id`              | `domain_id`, `vocabulary_id`, `concept_class_id`                                                                                                                                                            |
-| **CONCEPT_ANCESTOR**      | `ancestor_concept_id`     | `descendant_concept_id`                                                                                                                                                                                     |
-| **CONCEPT_RELATIONSHIP**  | 없음                      | `concept_id_1`, `concept_id_2`, `relationship_id`                                                                                                                                                           |
-| **CONCEPT_SYNONYM**       | `concept_id`              | `language_concept_id`                                                                                                                                                                                       |
-| **DOMAIN**                | `domain_id`               | `domain_concept_id`                                                                                                                                                                                         |
-| **VOCABULARY**            | `vocabulary_id`           | `vocabulary_concept_id`                                                                                                                                                                                     |
-| **SOURCE_TO_CONCEPT_MAP** | 없음                      | `source_concept_id`, `target_concept_id`, `target_vocabulary_id`                                                                                                                                            |
-| **DRUG_STRENGTH**         | 없음                      | `drug_concept_id`, `ingredient_concept_id`                                                                                                                                                                  |
-| **COHORT**                | 없음                      | `cohort_definition_id`, `subject_id`                                                                                                                                                                        |
-| **COHORT_DEFINITION**     | `cohort_definition_id`    | `definition_type_concept_id`, `subject_concept_id`                                                                                                                                                          |
+If the question cannot be answered:  
+`error: <brief explanation>`  
 
 ---
 
-## 사용 방법
-
-자연어 텍스트 입력 예시:
-
+```sql
+create table person (
+  person_id bigint primary key,
+  gender_concept_id integer,
+  year_of_birth integer,
+  month_of_birth integer,
+  day_of_birth integer,
+  birth_datetime timestamp,
+  race_concept_id integer,
+  ethnicity_concept_id integer,
+  location_id bigint,
+  provider_id bigint,
+  care_site_id bigint,
+  person_source_value varchar,
+  gender_source_value varchar,
+  gender_source_concept_id integer,
+  race_source_value varchar,
+  race_source_concept_id integer,
+  ethnicity_source_value varchar,
+  ethnicity_source_concept_id integer
+);
 ```
-{text}
-```
 
-이 텍스트를 해석하여 해당하는 SQL 쿼리를 생성하세요.
+Example rows:
+```sql
+select * from person limit 3;
+-- person_id | gender_concept_id | year_of_birth | race_concept_id | ethnicity_concept_id
+-- 101       | 8507              | 1950          | 8527            | 38003563
+-- 102       | 8532              | 1980          | 8515            | 38003564
+-- 103       | 8506              | 2000          | 8657            | 38003565
+```
 
 ---
 
-## 응답 형식
+```sql
+create table death (
+  person_id bigint primary key references person(person_id),
+  death_date date,
+  death_datetime timestamp,
+  death_type_concept_id integer,
+  cause_concept_id integer,
+  cause_source_value varchar,
+  cause_source_concept_id integer
+);
+```
+Example rows:
+```sql
+```
 
-- 반환 값은 한 문장으로 구성되어 있습니다. 문장 구성은 KEY:VALUE 형식으로 되어 있습니다.
+---
 
-성공 시, 
-"sql : 생성된 SQL 쿼리"
+```sql
+create table condition_occurrence (
+  condition_occurrence_id bigint primary key,
+  person_id bigint references person(person_id),
+  condition_concept_id integer,
+  condition_start_date date,
+  condition_start_datetime timestamp,
+  condition_end_date date,
+  condition_end_datetime timestamp,
+  condition_type_concept_id integer,
+  condition_status_concept_id integer,
+  stop_reason varchar,
+  provider_id bigint,
+  visit_occurrence_id bigint,
+  visit_detail_id bigint,
+  condition_source_value varchar,
+  condition_source_concept_id integer,
+  condition_status_source_value varchar
+);
+```
 
-실패 시,
-"error : 오류 메시지"
+Example rows:
+```sql
+```
+
+---
+```sql
+create table device_exposure (
+  device_exposure_id bigint primary key,
+  person_id bigint references person(person_id),
+  device_concept_id integer,
+  device_exposure_start_date date,
+  device_exposure_start_datetime timestamp,
+  device_exposure_end_date date,
+  device_exposure_end_datetime timestamp,
+  device_type_concept_id integer,
+  unique_device_id varchar,
+  quantity integer,
+  provider_id bigint,
+  visit_occurrence_id bigint,
+  visit_detail_id bigint,
+  device_source_value varchar,
+  device_source_concept_id integer
+);
+```
+
+Example rows:
+```sql
+```
+
+---
+
+```sql
+create table drug_exposure (
+  drug_exposure_id bigint primary key,
+  person_id bigint references person(person_id),
+  drug_concept_id integer,
+  drug_exposure_start_date date,
+  drug_exposure_start_datetime timestamp,
+  drug_exposure_end_date date,
+  drug_exposure_end_datetime timestamp,
+  verbatim_end_date date,
+  drug_type_concept_id integer,
+  stop_reason varchar,
+  refills integer,
+  quantity float,
+  days_supply integer,
+  sig varchar,
+  route_concept_id integer,
+  lot_number varchar,
+  provider_id bigint,
+  visit_occurrence_id bigint,
+  visit_detail_id bigint,
+  drug_source_value varchar,
+  drug_source_concept_id integer,
+  route_source_value varchar,
+  dose_unit_source_value varchar
+);
+
+```
+Example rows:
+```sql
+```
+
+---
+
+
+```sql
+create table measurement (
+  measurement_id bigint primary key,
+  person_id bigint references person(person_id),
+  measurement_concept_id integer,
+  measurement_date date,
+  measurement_datetime timestamp,
+  measurement_time varchar,
+  measurement_type_concept_id integer,
+  operator_concept_id integer,
+  value_as_number float,
+  value_as_concept_id integer,
+  unit_concept_id integer,
+  range_low float,
+  range_high float,
+  provider_id bigint,
+  visit_occurrence_id bigint,
+  visit_detail_id bigint,
+  measurement_source_value varchar,
+  measurement_source_concept_id integer,
+  unit_source_value varchar,
+  value_source_value varchar
+);
+```
+
+Example rows:
+```sql
+```
+
+---
+
+```sql
+create table observation_period (
+  observation_period_id bigint primary key,
+  person_id bigint references person(person_id),
+  observation_period_start_date date,
+  observation_period_end_date date,
+  period_type_concept_id integer
+);
+```
+
+Example rows:
+```sql
+```
+
+---
+
+```sql
+create table procedure_occurrence (
+  procedure_occurrence_id bigint primary key,
+  person_id bigint references person(person_id),
+  procedure_concept_id integer,
+  procedure_date date,
+  procedure_datetime timestamp,
+  procedure_type_concept_id integer,
+  modifier_concept_id integer,
+  quantity integer,
+  provider_id bigint,
+  visit_occurrence_id bigint,
+  visit_detail_id bigint,
+  procedure_source_value varchar,
+  procedure_source_concept_id integer,
+  modifier_source_value varchar
+);
+```
+
+Example rows:
+```sql
+```
+
+---
+```sql
+create table visit_occurrence (
+  visit_occurrence_id bigint primary key,
+  person_id bigint references person(person_id),
+  visit_concept_id integer,
+  visit_start_date date,
+  visit_start_datetime timestamp,
+  visit_end_date date,
+  visit_end_datetime timestamp,
+  visit_type_concept_id integer,
+  provider_id bigint,
+  care_site_id bigint,
+  visit_source_value varchar,
+  visit_source_concept_id integer,
+  admitting_source_concept_id integer,
+  admitting_source_value varchar,
+  discharge_to_concept_id integer,
+  discharge_to_source_value varchar,
+  preceding_visit_occurrence_id bigint
+);
+```
+
+Example rows:
+```sql
+```
+
+---
+
+```sql
+create table visit_detail (
+  visit_detail_id bigint primary key,
+  person_id bigint references person(person_id),
+  visit_detail_concpet_id integer,
+  visit_detail_start_date date,
+  visit_detail_start_datetime timestamp,
+  visit_detail_end_date date,
+  visit_detail_end_datetime timestamp,
+  visit_detail_type_concept_id integer,
+  provider_id bigint,
+  care_site_id bigint,
+  visit_detail_source_value varchar,
+  visit_detail_source_concept_id integer,
+  admitting_source_concept_id integer,
+  admitting_source_value varchar,
+  discharge_to_concept_id integer,
+  discharge_to_source_value varchar,
+  preceding_visit_detail_id bigint,
+  visit_detail_parent_id bigint,
+  visit_occurrence_id bigint
+);
+```
+
+Example rows:
+```sql
+```
+
+---
+
+Using valid PostgreSQL, answer the following questions for the tables provided above only.  
+Return output in one of the following formats:
+
+```text
+sql : <sql query>
+error : <brief explanation>
+```  
+
+Question : {text}
