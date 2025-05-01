@@ -25,6 +25,5 @@ class LogSqlGeneratorRequestModel(base):
     llm_request_timestamp: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     llm_response_timestamp: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     sql_validation_reason: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    post_llm_filter_complete_timestamp: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     llm_model_used: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     

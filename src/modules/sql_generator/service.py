@@ -3,6 +3,7 @@ import numpy as np
 import os
 import logging
 
+from datetime import datetime
 from src.modules.sql_generator.dto import SqlGeneratorRequestDto, SqlGeneratorResponseDto
 from src.modules.gemini import service as gemini_service
 from sentence_transformers import SentenceTransformer
@@ -26,17 +27,34 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
             prompt += "\n".join(example)
             prompt += "\n Please answer the questions based on the reference documents above."
 
+        llm_request_timestamp = datetime.now()
         result = model_service.generate_response(prompt, sqlGeneratorRequestDto)
+        llm_response_timestamp = datetime.now()
+        
         content = result.content
         
         sqlGeneratorResponseDto = SqlGeneratorResponseDto(
             sql=content.get("sql"),
             error=content.get("error")
         )
-
+        
         save_sql_generator_log(LogSqlGeneratorRequestModel(
             user_input_text = sqlGeneratorRequestDto.text,
-            generated_sql = sqlGeneratorResponseDto.sql
+            input_received_timestamp = sqlGeneratorRequestDto.input_received_timestamp,
+            
+            pre_llm_filter_status = sqlGeneratorRequestDto.pre_llm_filter_status,
+            pre_llm_filter_reason = sqlGeneratorRequestDto.pre_llm_filter_reason,
+            pre_llm_filter_complete_timestamp = sqlGeneratorRequestDto.pre_llm_filter_complete_timestamp,
+            
+            generated_sql = sqlGeneratorResponseDto.sql,
+            
+            llm_request_timestamp = llm_request_timestamp,
+            llm_response_timestamp = llm_response_timestamp,
+            
+            sql_validation_reason = sqlGeneratorResponseDto.error,
+            
+            llm_model_used = "GEMINI"
+            
         ))
       
         return sqlGeneratorResponseDto

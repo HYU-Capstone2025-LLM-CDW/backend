@@ -7,7 +7,7 @@ from src.modules.log.dto import LogSqlGeneratorRequestModel, base
 from src.config import settings
 
 # PostgreSQL 연결 설정
-_database_url = f"postgresql://{settings.db_user}:{settings.db_password}@{settings.db_host}:{settings.db_port}/{settings.db_name}"
+_database_url = f"postgresql://{settings.log_db_user}:{settings.log_db_password}@{settings.log_db_host}:{settings.log_db_port}/{settings.log_db_name}"
 _engine = create_engine(_database_url)
 
 _session_local = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
