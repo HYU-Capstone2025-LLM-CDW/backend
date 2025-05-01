@@ -72,7 +72,7 @@ def _add_relevant_query(query: str, top_k: int = 1) -> list[str]:
 
 """ SQL GENERATOR LOG """
 
-def _logger_init():
+def _logger_init() -> logging.Logger:
     log_file = "sql_generator.log"
     
     log_format = (
@@ -107,11 +107,11 @@ def log_sql_generator(sqlGeneratorRequestDto: SqlGeneratorRequestDto, sqlGenerat
     error = sqlGeneratorResponseDto.error
     
     data = {    
-        'email': email if email is not None else '',
-        'query': query if query is not None else '',
-        'sql': sql if sql is not None else '',
-        'status' : None,
-        'error_message': error if error is not None else ''
+        'email': email if email is not None else 'None',
+        'query': query if query is not None else 'None',
+        'sql': sql if sql is not None else 'None',
+        'status' : 'None',
+        'error_message': error if error is not None else 'None'
     }
     
     # Error 여부에 따라 변경
