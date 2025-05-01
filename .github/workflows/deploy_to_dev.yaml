@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows: ["Build and Push Docker Image"]
     types:
-      - completed
+      - completedㅇ
 
 jobs:
   deploy:
@@ -12,35 +12,17 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout code (if needed)
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Prepare temporary Docker config (disable keychain helper)
-        run: |
-          mkdir -p /tmp/docker-config
-          echo '{ "credsStore": "none" }' > /tmp/docker-config/config.json
+      - name: Create .env file
+        run: echo '${{ secrets.ENV_FILE }}' > .env
 
-      - name: Docker Login (No Keychain)
-        run: |
-          echo "${{ secrets.DOCKER_ACCESS_TOKEN }}" | docker --config /tmp/docker-config login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      - name: Create .env file from Secret
-        run: |
-          echo '${{ secrets.ENV_FILE }}' > .env
-
-      - name: Deploy with Docker Compose
-        env:
-          DOCKER_CONFIG: /tmp/docker-config
-        run: |
-          COMPOSE_FILE_PATH="./docker-compose.yaml"
-          ENV_FILE_PATH="./.env"
-          APP_SERVICE_NAME="backend-app-container"
-
-          docker compose -f $COMPOSE_FILE_PATH --env-file $ENV_FILE_PATH pull $APP_SERVICE_NAME
-          docker compose -f $COMPOSE_FILE_PATH --env-file $ENV_FILE_PATH up -d --no-deps $APP_SERVICE_NAME
+      - name: Docker Compose Up (local build)
+        run: docker compose --env-file .env up -d
 
       - name: Remove .env file
         run: rm .env
 
-      - name: Clean up unused docker images (Optional)
+      - name: Clean up unused images (optional)
         run: docker image prune -af
