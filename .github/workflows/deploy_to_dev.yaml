@@ -18,8 +18,5 @@ jobs:
       - name: Docker Compose Up (local build)
         run: docker compose --env-file .env up -d
 
-      - name: Remove .env file
-        run: rm .env
-
       - name: Clean up unused images (optional)
         run: docker image prune -af
