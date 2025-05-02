@@ -13,24 +13,25 @@ from src.modules.log.service import save_sql_generator_log
 class SqlGeneratorRequestDto(BaseModel):
     text: str = Field(..., title="Text to convert to SQL", description="The text to convert to SQL")
     
+    # LOG 기록 용도 변수, __init__ 에 들어가지 않는다.
     input_received_timestamp: datetime = Field(
-        
-        # 이것은 datetime.now 로 해주어야 함, datatime.now() 시 오류류
         default_factory= datetime.now,
         description="input received timestamp",
         init=False
     )
-    pre_llm_filter_status : Optional[str] = Field(None, description="LLM 호출 전 텍스트 필터링 결과 ('passed', 'rejected')", init=False)
-    pre_llm_filter_reason : Optional[str] = Field(None, description="텍스트 필터링에서 거부된 이유 (e.g., 'profanity_detected', 'rule_id: [ID]')", init=False)
+    pre_llm_filter_status : Optional[str] = Field(None, description="Text filtering result ('passed', 'rejected')", init=False)
+    pre_llm_filter_reason : Optional[str] = Field(None, description="Text filtering reason", init=False)
     
     pre_llm_filter_complete_timestamp : datetime = Field(
         None,
-        description="텍스트 필터링 완료 시간",
+        description="Text filtering complete timestamp",
         init=False
     )
     
+    # LOG 에 기록 위해서 코드 구조 변경
+    # 기존 코드는 dto 내부 변수 변경 불가
     @model_validator(mode='after')
-    def apply_llm_filters(self):
+    def validate_text(self):
         # 필터링 상태 초기화 (혹시 모를 경우 대비, init=False로 인해 초기값은 None임)
         self.pre_llm_filter_status = 'passed' # 기본값 'passed'로 시작
         self.pre_llm_filter_reason = None
@@ -47,20 +48,18 @@ class SqlGeneratorRequestDto(BaseModel):
             self.pre_llm_filter_status = 'rejected'
             self.pre_llm_filter_reason = f"Unexpected validation error: {type(e).__name__} - {str(e)}"
             
-            
+            # 오류 사항 로그
             save_sql_generator_log(LogSqlGeneratorRequestModel(
-            user_input_text = self.text,
-            input_received_timestamp = self.input_received_timestamp,
-            
-            pre_llm_filter_status = self.pre_llm_filter_status,
-            pre_llm_filter_reason = self.pre_llm_filter_reason,
+                user_input_text = self.text,
+                input_received_timestamp = self.input_received_timestamp,
+                
+                pre_llm_filter_status = self.pre_llm_filter_status,
+                pre_llm_filter_reason = self.pre_llm_filter_reason,
 
-            llm_model_used = "GEMINI"
-            
-        ))
+                llm_model_used = "GEMINI")
+            )
             
             raise HTTPException(status_code=400, detail=str(e))
-            # 필요에 따라 로깅 또는 에러 처리 추가
 
         self.pre_llm_filter_complete_timestamp = datetime.now()
         return self

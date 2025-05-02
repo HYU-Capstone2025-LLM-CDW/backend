@@ -54,7 +54,6 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
             sql_validation_reason = sqlGeneratorResponseDto.error,
             
             llm_model_used = "GEMINI"
-            
         ))
       
         return sqlGeneratorResponseDto
