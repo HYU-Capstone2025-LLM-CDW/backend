@@ -15,7 +15,7 @@ class SqlGeneratorRequestDto(BaseModel):
     
     # LOG 기록 용도 변수, __init__ 에 들어가지 않는다.
     input_received_timestamp: datetime = Field(
-        default_factory= datetime.now,
+        None,
         description="input received timestamp",
         init=False
     )
@@ -24,7 +24,7 @@ class SqlGeneratorRequestDto(BaseModel):
     
     pre_llm_filter_complete_timestamp : datetime = Field(
         None,
-        description="Text filtering complete timestamp",
+        description="Text filtering completed timestamp",
         init=False
     )
     
@@ -35,6 +35,7 @@ class SqlGeneratorRequestDto(BaseModel):
         # 필터링 상태 초기화 (혹시 모를 경우 대비, init=False로 인해 초기값은 None임)
         self.pre_llm_filter_status = 'passed' # 기본값 'passed'로 시작
         self.pre_llm_filter_reason = None
+        self.input_received_timestamp = datetime.now()
 
         try:
             # 정의한 validator 클래스들을 사용하여 검증 수행
