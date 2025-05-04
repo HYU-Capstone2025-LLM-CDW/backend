@@ -42,7 +42,7 @@ class BasicSQLValidator:
         self._validate_allowed_columns()
         self._check_forbidden_dml()
         self._check_forbidden_ddl()
-        self._validate_allowed_keywords()
+        # self._validate_allowed_keywords()
         
     def _validate_allowed_tables(self) -> None:
         """
