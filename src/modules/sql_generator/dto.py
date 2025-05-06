@@ -17,15 +17,17 @@ class SqlGeneratorRequestDto(BaseModel):
     input_received_timestamp: datetime = Field(
         None,
         description="input received timestamp",
-        init=False
+        init=False,
+        exclude=True
     )
-    pre_llm_filter_status : Optional[str] = Field(None, description="Text filtering result ('passed', 'rejected')", init=False)
-    pre_llm_filter_reason : Optional[str] = Field(None, description="Text filtering reason", init=False)
+    pre_llm_filter_status : Optional[str] = Field(None, description="Text filtering result ('passed', 'rejected')", init=False, exclude=True)
+    pre_llm_filter_reason : Optional[str] = Field(None, description="Text filtering reason", init=False, exclude=True)
     
     pre_llm_filter_complete_timestamp : datetime = Field(
         None,
         description="Text filtering completed timestamp",
-        init=False
+        init=False,
+        exclude=True
     )
     
     # LOG 에 기록 위해서 코드 구조 변경
