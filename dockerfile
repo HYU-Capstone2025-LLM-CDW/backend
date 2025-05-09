@@ -32,12 +32,10 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# -------- 추가된 부분 시작 --------
 # 시스템 의존성 설치 (pg_isready 용)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
-# -------- 추가된 부분 끝 --------
 
 # 빌드 결과 복사
 COPY --from=builder /install /usr/local

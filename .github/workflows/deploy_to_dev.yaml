@@ -1,45 +1,22 @@
 name: Deploy to Dev
 
 on:
-  workflow_run:
-    workflows: ["Build and Push Docker Image"] # 빌드 워크플로우 이름 확인
-    types:
-      - completed
+  push:
+    branches: [main]
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }} # 빌드 성공 시에만 실행
-    runs-on: self-hosted # 기존과 동일
+    runs-on: self-hosted
 
     steps:
-      # 1. (선택 사항) 저장소에 docker-compose.yaml이 있다면 Checkout
-      # self-hosted 러너에 docker-compose.yaml 파일이 없다면 이 단계가 필요합니다.
-      - name: Checkout code (if needed)
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. .env 파일 생성 (기존과 동일하나 내용이 중요)
-      - name: Create .env file from Secret
-        # 중요: secrets.ENV_FILE은 docker-compose.yaml 및 내부 서비스(앱, DB)가
-        # 필요로 하는 모든 환경 변수를 포함해야 합니다.
-        # 예: POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB,
-        #     DB_HOST=db (compose 내 DB 서비스 이름), APP_IMAGE_TAG=latest 등
-        run: |
-          echo '${{ secrets.ENV_FILE }}' > .env # 파일 이름을 .env 로 가정
+      - name: Create .env file
+        run: echo '${{ secrets.ENV_FILE }}' > .env
 
-      # 3. Docker Compose로 배포
-      - name: Deploy with Docker Compose
-        run: |
-          COMPOSE_FILE_PATH="./docker-compose.yaml"
-          ENV_FILE_PATH="./.env"               
-          APP_SERVICE_NAME="fastapi"           
+      - name: Docker Compose Up (local build)
+        run: docker compose --env-file .env up -d --build
 
-          docker compose -f $COMPOSE_FILE_PATH --env-file $ENV_FILE_PATH pull $APP_SERVICE_NAME
-          docker compose -f $COMPOSE_FILE_PATH --env-file $ENV_FILE_PATH up -d --no-deps $APP_SERVICE_NAME
-
-      # 4. .env 파일 삭제 (보안)
-      - name: Remove .env file
-        run: rm .env # 생성한 .env 파일 삭제
-
-      # 5. (선택 사항) 사용하지 않는 Docker 이미지 정리
-      - name: Clean up unused docker images (Optional)
-        run: docker image prune -af # -a 옵션 추가 시 사용하지 않는 모든 이미지 삭제
+      - name: Clean up unused images (optional)
+        run: docker image prune -af
