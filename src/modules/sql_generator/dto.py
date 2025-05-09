@@ -7,7 +7,7 @@ from src.validator.text_validator.basic_text_validator import BasicTextValidator
 from src.validator.text_validator.secure_text_validator import SecureTextValidator
 from src.validator.sql_validator.basic_sql_validator import BasicSQLValidator
 
-from src.modules.log.dto import LogSqlGeneratorRequestModel
+from src.modules.log.dto import SqlGeneratorLogRequestModel
 from src.modules.log.service import save_sql_generator_log
 
 class SqlGeneratorRequestDto(BaseModel):
@@ -52,7 +52,7 @@ class SqlGeneratorRequestDto(BaseModel):
             self.pre_llm_filter_reason = f"Unexpected validation error: {type(e).__name__} - {str(e)}"
             
             # 오류 사항 로그
-            save_sql_generator_log(LogSqlGeneratorRequestModel(
+            save_sql_generator_log(SqlGeneratorLogRequestModel(
                 user_input_text = self.text,
                 input_received_timestamp = self.input_received_timestamp,
                 
