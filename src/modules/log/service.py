@@ -1,29 +1,17 @@
-from datetime import datetime
-from typing import Optional
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+from fastapi import Depends
+from fastapi import HTTPException
 
-from src.modules.log.dto import SqlGeneratorLogRequestModel, base
+from src.modules.log.dto import SqlGeneratorLogRequestModel
 from src.config import settings
+from src.database import get_db_internal
 
 import traceback
 
-# PostgreSQL 연결 설정
-_database_url = f"postgresql://{settings.log_db_user}:{settings.log_db_password}@{settings.log_db_host}:{settings.log_db_port}/{settings.log_db_name}"
-_engine = create_engine(_database_url)
-
-_session_local = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
-
-
-# log table 없을 시 생성
-def create_sql_generator_table():
-    base.metadata.create_all(_engine)
-
-create_sql_generator_table()
 
 def save_sql_generator_log (db_log : SqlGeneratorLogRequestModel):
-    db = _session_local()
+    db = get_db_internal()
     
     try:    
         db.add(db_log)
@@ -35,12 +23,13 @@ def save_sql_generator_log (db_log : SqlGeneratorLogRequestModel):
         db.rollback()
         print(f"Database Error: {db_err}")
         traceback.print_exc()
-        
+        raise HTTPException(status_code=400, detail="An error occurred while saving sql_generator_log.")
 
     except Exception as e:
         db.rollback()
         print(f"Unexpected Error: {e}")
         traceback.print_exc()
+        raise HTTPException(status_code=400, detail="An unexpected server error occurred.")
     
     finally:
         db.close()
