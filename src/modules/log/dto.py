@@ -16,7 +16,7 @@ class SqlGeneratorLogRequestModel(Base):
     # user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), nullable=False)
     # session_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     
-    input_received_timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=True, server_default=func.now())
+    input_received_timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     user_input_text: Mapped[str] = mapped_column(Text, nullable=True)
     
     pre_llm_filter_status: Mapped[str] = mapped_column(String(50), nullable=True)

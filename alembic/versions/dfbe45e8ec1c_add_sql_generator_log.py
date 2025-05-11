@@ -26,7 +26,7 @@ def upgrade() -> None:
         # user_id와 session_id는 주석 처리되어 있으므로 포함하지 않습니다.
         # sa.Column('user_id', sa.Integer(), nullable=False), # ForeignKey는 필요에 따라 추가
         # sa.Column('session_id', sa.String(length=255), nullable=True),
-        sa.Column('input_received_timestamp', sa.DateTime(), server_default=func.now(), nullable=True),
+        sa.Column('input_received_timestamp', sa.DateTime(),  nullable=True),
         sa.Column('user_input_text', sa.Text(), nullable=True),
         sa.Column('pre_llm_filter_status', sa.String(length=50), nullable=True),
         sa.Column('pre_llm_filter_reason', sa.Text(), nullable=True),
