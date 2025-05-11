@@ -51,7 +51,7 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
             llm_request_timestamp = llm_request_timestamp,
             llm_response_timestamp = llm_response_timestamp,
             
-            sql_validation_reason = sqlGeneratorResponseDto.error,
+            llm_validation_reason = sqlGeneratorResponseDto.error,
             
             llm_model_used = "GEMINI"
         ))

@@ -34,7 +34,7 @@ def upgrade() -> None:
         sa.Column('generated_sql', sa.Text(), nullable=True),
         sa.Column('llm_request_timestamp', sa.DateTime(), nullable=True),
         sa.Column('llm_response_timestamp', sa.DateTime(), nullable=True),
-        sa.Column('sql_validation_reason', sa.Text(), nullable=True),
+        sa.Column('llm_validation_reason', sa.Text(), nullable=True),
         sa.Column('llm_model_used', sa.String(length=255), nullable=True),
         sa.PrimaryKeyConstraint('log_id')
     )
