@@ -80,14 +80,18 @@ def get_query_and_log(limit : int = 50) -> tuple[list[str], list[str]]:
 
         # Query list 가 빈 경우 예시 하나씩 넣어줌
         if not query_list or not sql_list:
-            return (["show person"], ["select * from person"])
+            query_list = ["show person"]
+            sql_list = ["select * from person"]
    
         
     except Exception as e:
         db.rollback()
         print(f"데이터베이스 오류 발생 (Session 사용): {e}")
-        return (["show person"], ["select * from person"])
-   
+        query_list = ["show person"]
+        sql_list = ["select * from person"]
+    
+    finally:
+        db.close()
 
     return query_list, sql_list
         
