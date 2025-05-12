@@ -16,48 +16,49 @@ from fastapi import HTTPException
 
 
 def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResponseDto:
-    model_service = gemini_service
-    prompt = omop_service.get_prompt()
-    
-    #RAG를 사용한 Example 을 반영하는 코드
-    example = None # _add_relevant_query(sqlGeneratorRequestDto.text)
-    
-    # Example 이 존재할 때만 예시 추가
-    if example:
-        prompt += "\n There are some few examples \n"
-        prompt += "\n".join(example)
-        prompt += "\n Please answer the questions based on the reference documents above."
+    try:  
+        model_service = gemini_service
+        prompt = omop_service.get_prompt()
+        
+        #RAG를 사용한 Example 을 반영하는 코드
+        example = None # _add_relevant_query(sqlGeneratorRequestDto.text)
+        
+        # Example 이 존재할 때만 예시 추가
+        if example:
+            prompt += "\n There are some few examples \n"
+            prompt += "\n".join(example)
+            prompt += "\n Please answer the questions based on the reference documents above."
 
-        llm_request_timestamp = datetime.now()
-        result = model_service.generate_response(prompt, sqlGeneratorRequestDto)
-        llm_response_timestamp = datetime.now()
+            llm_request_timestamp = datetime.now()
+            result = model_service.generate_response(prompt, sqlGeneratorRequestDto)
+            llm_response_timestamp = datetime.now()
+            
+            content = result.content
+            
+            sqlGeneratorResponseDto = SqlGeneratorResponseDto(
+                sql=content.get("sql"),
+                error=content.get("error")
+            )
+            
+            save_sql_generator_log(SqlGeneratorLogRequestModel(
+                user_input_text = sqlGeneratorRequestDto.text,
+                input_received_timestamp = sqlGeneratorRequestDto.input_received_timestamp,
+                
+                pre_llm_filter_status = sqlGeneratorRequestDto.pre_llm_filter_status,
+                pre_llm_filter_reason = sqlGeneratorRequestDto.pre_llm_filter_reason,
+                pre_llm_filter_complete_timestamp = sqlGeneratorRequestDto.pre_llm_filter_complete_timestamp,
+                
+                generated_sql = sqlGeneratorResponseDto.sql,
+                
+                llm_request_timestamp = llm_request_timestamp,
+                llm_response_timestamp = llm_response_timestamp,
+                
+                llm_validation_reason = sqlGeneratorResponseDto.error,
+                
+                llm_model_used = "GEMINI"
+            ))
         
-        content = result.content
-        
-        sqlGeneratorResponseDto = SqlGeneratorResponseDto(
-            sql=content.get("sql"),
-            error=content.get("error")
-        )
-        
-        save_sql_generator_log(SqlGeneratorLogRequestModel(
-            user_input_text = sqlGeneratorRequestDto.text,
-            input_received_timestamp = sqlGeneratorRequestDto.input_received_timestamp,
-            
-            pre_llm_filter_status = sqlGeneratorRequestDto.pre_llm_filter_status,
-            pre_llm_filter_reason = sqlGeneratorRequestDto.pre_llm_filter_reason,
-            pre_llm_filter_complete_timestamp = sqlGeneratorRequestDto.pre_llm_filter_complete_timestamp,
-            
-            generated_sql = sqlGeneratorResponseDto.sql,
-            
-            llm_request_timestamp = llm_request_timestamp,
-            llm_response_timestamp = llm_response_timestamp,
-            
-            llm_validation_reason = sqlGeneratorResponseDto.error,
-            
-            llm_model_used = "GEMINI"
-        ))
-      
-        return sqlGeneratorResponseDto
+            return sqlGeneratorResponseDto
 
     except Exception as e:
         print(f"Unexpected Error: {e}")
@@ -107,6 +108,8 @@ def _rag_init():
     
     return embedding_model, query_list, sql_list, query_index
 
+_embedding_model, _query_list, _sql_list, _query_index = _rag_init()
+
 # Query 와 유사했던 이전의 Query 와 그에 대한 SQL을 Example 로 보내는 함수, top_k개의 example 선정
 # sql_generator 의 service.py 에서만 실행하므로 private 함수로 설정
 def _add_relevant_query(query: str, top_k: int = 1) -> list[str]:
@@ -121,3 +124,13 @@ def _add_relevant_query(query: str, top_k: int = 1) -> list[str]:
     # 현재는 유사하다고 판단되는 example 을 top_k 만큼 보내는 형식
     # 유사한 정도인 distance 는 사용하지 않고 있으나 추후 최소치 같은 방법으로 사용할 수도 있음.
     return [(f"query : {_query_list[i]}, sql : {_sql_list[i]}") for i in indices[0]]
+
+# vector db 에 query 추가 및 (query, sql) 쌍 추가
+# 순서 유지 필수
+def _add_query_to_vector(query: str, sql: str):
+    query_vector = _embedding_model.encode([query])
+    _query_index.add(query_vector)
+    
+    _query_list.append(query)
+    _sql_list.append(sql)
+    
