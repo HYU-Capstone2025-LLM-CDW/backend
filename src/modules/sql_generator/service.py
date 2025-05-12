@@ -1,12 +1,20 @@
 import faiss
 import numpy as np
 import os
+import logging
+import traceback
 
+from datetime import datetime
 from src.modules.sql_generator.dto import SqlGeneratorRequestDto, SqlGeneratorResponseDto
 from src.modules.gemini import service as gemini_service
 from sentence_transformers import SentenceTransformer
 from src.modules.omop import service as omop_service
-    
+
+from src.modules.log.dto import SqlGeneratorLogRequestModel
+from src.modules.log.service import save_sql_generator_log
+from fastapi import HTTPException
+
+
 def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResponseDto:
     model_service = gemini_service
     prompt = omop_service.get_prompt()
@@ -16,17 +24,46 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
     
     # Example 이 존재할 때만 예시 추가
     if example:
-        prompt += "\n There is one example \n"
+        prompt += "\n There are some few examples \n"
         prompt += "\n".join(example)
         prompt += "\n Please answer the questions based on the reference documents above."
 
-    result = model_service.generate_response(prompt, sqlGeneratorRequestDto)
-    content = result.content
-    
-    return SqlGeneratorResponseDto(
-        sql=content.get("sql"),
-        error=content.get("error")
-    )
+        llm_request_timestamp = datetime.now()
+        result = model_service.generate_response(prompt, sqlGeneratorRequestDto)
+        llm_response_timestamp = datetime.now()
+        
+        content = result.content
+        
+        sqlGeneratorResponseDto = SqlGeneratorResponseDto(
+            sql=content.get("sql"),
+            error=content.get("error")
+        )
+        
+        save_sql_generator_log(SqlGeneratorLogRequestModel(
+            user_input_text = sqlGeneratorRequestDto.text,
+            input_received_timestamp = sqlGeneratorRequestDto.input_received_timestamp,
+            
+            pre_llm_filter_status = sqlGeneratorRequestDto.pre_llm_filter_status,
+            pre_llm_filter_reason = sqlGeneratorRequestDto.pre_llm_filter_reason,
+            pre_llm_filter_complete_timestamp = sqlGeneratorRequestDto.pre_llm_filter_complete_timestamp,
+            
+            generated_sql = sqlGeneratorResponseDto.sql,
+            
+            llm_request_timestamp = llm_request_timestamp,
+            llm_response_timestamp = llm_response_timestamp,
+            
+            llm_validation_reason = sqlGeneratorResponseDto.error,
+            
+            llm_model_used = "GEMINI"
+        ))
+      
+        return sqlGeneratorResponseDto
+
+    except Exception as e:
+        print(f"Unexpected Error: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
+
 
 """ RAG(Retrieval-Augmented Generation) """ 
 
@@ -84,5 +121,3 @@ def _add_relevant_query(query: str, top_k: int = 1) -> list[str]:
     # 현재는 유사하다고 판단되는 example 을 top_k 만큼 보내는 형식
     # 유사한 정도인 distance 는 사용하지 않고 있으나 추후 최소치 같은 방법으로 사용할 수도 있음.
     return [(f"query : {_query_list[i]}, sql : {_sql_list[i]}") for i in indices[0]]
-
-_embedding_model, _query_list, _sql_list, _query_index = _rag_init()
