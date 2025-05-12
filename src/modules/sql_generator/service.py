@@ -25,9 +25,10 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
         
         # Example 이 존재할 때만 예시 추가
         if example:
-            prompt += "\n There are some few examples \n"
+            prompt += "\n <EXAMPLE> \n"
             prompt += "\n".join(example)
-            prompt += "\n Please answer the questions based on the reference documents above."
+            prompt += "\n </EXAMPLE> \n"
+            prompt += "\n Please use the above example for reference only and do not include it in your answer."
 
         
         llm_request_timestamp = datetime.now()
