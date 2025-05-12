@@ -50,7 +50,6 @@ def get_query_and_log(limit : int = 50) -> tuple[list[str], list[str]]:
             'sql_generator_log',
             metadata,
             autoload_with=db.bind, # Session에 바인딩된 엔진 사용
-            existing=True
         )
 
         # select 문 작성
@@ -79,9 +78,15 @@ def get_query_and_log(limit : int = 50) -> tuple[list[str], list[str]]:
              query_list.append(row.user_input_text)
              sql_list.append(row.generated_sql)
 
+        # Query list 가 빈 경우 예시 하나씩 넣어줌
+        if not query_list and not sql_list:
+            return (["show person"], ["select * from person"])
+   
+        
     except Exception as e:
         db.rollback()
         print(f"데이터베이스 오류 발생 (Session 사용): {e}")
+        return (["show person"], ["select * from person"])
    
 
     return query_list, sql_list

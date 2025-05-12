@@ -11,17 +11,17 @@ from sentence_transformers import SentenceTransformer
 from src.modules.omop import service as omop_service
 
 from src.modules.log.dto import SqlGeneratorLogRequestModel
-from src.modules.log.service import save_sql_generator_log
+from src.modules.log.service import save_sql_generator_log, get_query_and_log
 from fastapi import HTTPException
 
 
 def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResponseDto:
-    try:  
+    try:
         model_service = gemini_service
         prompt = omop_service.get_prompt()
         
         #RAG를 사용한 Example 을 반영하는 코드
-        example = None # _add_relevant_query(sqlGeneratorRequestDto.text)
+        example =  _add_relevant_query(sqlGeneratorRequestDto.text)
         
         # Example 이 존재할 때만 예시 추가
         if example:
@@ -29,36 +29,41 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
             prompt += "\n".join(example)
             prompt += "\n Please answer the questions based on the reference documents above."
 
-            llm_request_timestamp = datetime.now()
-            result = model_service.generate_response(prompt, sqlGeneratorRequestDto)
-            llm_response_timestamp = datetime.now()
-            
-            content = result.content
-            
-            sqlGeneratorResponseDto = SqlGeneratorResponseDto(
-                sql=content.get("sql"),
-                error=content.get("error")
-            )
-            
-            save_sql_generator_log(SqlGeneratorLogRequestModel(
-                user_input_text = sqlGeneratorRequestDto.text,
-                input_received_timestamp = sqlGeneratorRequestDto.input_received_timestamp,
-                
-                pre_llm_filter_status = sqlGeneratorRequestDto.pre_llm_filter_status,
-                pre_llm_filter_reason = sqlGeneratorRequestDto.pre_llm_filter_reason,
-                pre_llm_filter_complete_timestamp = sqlGeneratorRequestDto.pre_llm_filter_complete_timestamp,
-                
-                generated_sql = sqlGeneratorResponseDto.sql,
-                
-                llm_request_timestamp = llm_request_timestamp,
-                llm_response_timestamp = llm_response_timestamp,
-                
-                llm_validation_reason = sqlGeneratorResponseDto.error,
-                
-                llm_model_used = "GEMINI"
-            ))
         
-            return sqlGeneratorResponseDto
+        llm_request_timestamp = datetime.now()
+        result = model_service.generate_response(prompt, sqlGeneratorRequestDto)
+        llm_response_timestamp = datetime.now()
+        
+        content = result.content
+        
+        sqlGeneratorResponseDto = SqlGeneratorResponseDto(
+            sql=content.get("sql"),
+            error=content.get("error")
+        )
+        
+        save_sql_generator_log(SqlGeneratorLogRequestModel(
+            user_input_text = sqlGeneratorRequestDto.text,
+            input_received_timestamp = sqlGeneratorRequestDto.input_received_timestamp,
+            
+            pre_llm_filter_status = sqlGeneratorRequestDto.pre_llm_filter_status,
+            pre_llm_filter_reason = sqlGeneratorRequestDto.pre_llm_filter_reason,
+            pre_llm_filter_complete_timestamp = sqlGeneratorRequestDto.pre_llm_filter_complete_timestamp,
+            
+            generated_sql = sqlGeneratorResponseDto.sql,
+            
+            llm_request_timestamp = llm_request_timestamp,
+            llm_response_timestamp = llm_response_timestamp,
+            
+            llm_validation_reason = sqlGeneratorResponseDto.error,
+            
+            llm_model_used = "GEMINI"
+        ))
+
+        if sqlGeneratorResponseDto.sql:
+            _add_query_to_vector(sqlGeneratorRequestDto.text, sqlGeneratorResponseDto.sql)
+        
+        
+        return sqlGeneratorResponseDto
 
     except Exception as e:
         print(f"Unexpected Error: {e}")
@@ -76,34 +81,53 @@ def _rag_init():
     file_path = "src/modules/sql_generator/"
     query_file = "query_example.md"
     sql_file = "sql_example.md"
-    index_file = "query_index.faiss"
-    
-    # 추후 search_history(LOG), data set 등 에서 불러오는 작업 필요
-    query_list = []
-    
-    with open(file_path + query_file, 'r', encoding='utf-8') as file:
-        for line in file:
-            query_list.append(line.strip())
-    
-    
-    sql_list = [] 
-    with open(file_path + sql_file, 'r', encoding='utf-8') as file:
-        content = file.read()
-        
-    sql_list = [q.strip() for q in content.split(';') if q.strip()]
+    index_file = "query_index.faiss"    
     
     # Vector DB 불러오기 없을 시 새로 생성
     index_path = file_path + index_file
-    if os.path.exists(index_path):
-        query_index = faiss.read_index(index_path)
     
-    # Vector DB(_query_index)
-    else :
-        query_index = faiss.IndexFlatL2(embedding_model.get_sentence_embedding_dimension())
+    # 기존에 Vector DB 가 존재하는 경우
+    # if os.path.exists(index_path):
+    #     query_index = faiss.read_index(index_path)
+        
+    #     query_list = []
+    
+    #     with open(file_path + query_file, 'r', encoding='utf-8') as file:
+    #         for line in file:
+    #             query_list.append(line.strip())
+        
+    #     sql_list = [] 
+    #     with open(file_path + sql_file, 'r', encoding='utf-8') as file:
+    #         for line in file:
+    #             query_list.append(line.strip())
+        
+    # Vector DB(_query_index) 를 새로 생성해야 하는 경우
+    # (추후 함수화 필요)
+    # else :
+    
+    # 현재는 서버 시작할 때마다 생성하게 함 추후 변경 가능
+    # query, sql list 를 저장함
+    query_list, sql_list = get_query_and_log()
+        
+    try:
+        with open(file_path + query_file, 'w', encoding='utf-8') as f:
+            for item in query_list:
+                f.write(str(item) + '\n')
+            
+        with open(file_path + sql_file, 'w', encoding='utf-8') as f:
+            for item in sql_list:
+                f.write(str(item) + '\n')
+            
+            
+    except IOError as e:
+        print("Error occur during make query, sql list file")
+        
+        
+    query_index = faiss.IndexFlatL2(embedding_model.get_sentence_embedding_dimension())
 
-        # _query_list 를 vector 화 시켜서  vector DB 에 추가
-        query_index.add(np.array(embedding_model.encode(query_list)))
-        faiss.write_index(query_index, index_path)
+    # _query_list 를 vector 화 시켜서  vector DB 에 추가
+    query_index.add(np.array(embedding_model.encode(query_list)))
+    faiss.write_index(query_index, index_path)
     
     
     return embedding_model, query_list, sql_list, query_index
