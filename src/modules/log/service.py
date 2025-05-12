@@ -23,13 +23,11 @@ def save_sql_generator_log (db_log : SqlGeneratorLogRequestModel):
         db.rollback()
         print(f"Database Error: {db_err}")
         traceback.print_exc()
-        raise HTTPException(status_code=400, detail="An error occurred while saving sql_generator_log.")
 
     except Exception as e:
         db.rollback()
         print(f"Unexpected Error: {e}")
         traceback.print_exc()
-        raise HTTPException(status_code=400, detail="An unexpected server error occurred.")
     
     finally:
         db.close()

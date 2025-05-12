@@ -2,6 +2,7 @@ import faiss
 import numpy as np
 import os
 import logging
+import traceback
 
 from datetime import datetime
 from src.modules.sql_generator.dto import SqlGeneratorRequestDto, SqlGeneratorResponseDto
@@ -11,6 +12,7 @@ from src.modules.omop import service as omop_service
 
 from src.modules.log.dto import SqlGeneratorLogRequestModel
 from src.modules.log.service import save_sql_generator_log
+from fastapi import HTTPException
 
 
 def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResponseDto:
@@ -59,7 +61,9 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
         return sqlGeneratorResponseDto
 
     except Exception as e:
-        print(e)
+        print(f"Unexpected Error: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
 
 
 """ RAG(Retrieval-Augmented Generation) """ 
