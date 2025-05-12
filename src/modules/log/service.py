@@ -79,7 +79,7 @@ def get_query_and_log(limit : int = 50) -> tuple[list[str], list[str]]:
              sql_list.append(row.generated_sql)
 
         # Query list 가 빈 경우 예시 하나씩 넣어줌
-        if not query_list and not sql_list:
+        if not query_list or not sql_list:
             return (["show person"], ["select * from person"])
    
         

@@ -73,7 +73,7 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
 
 """ RAG(Retrieval-Augmented Generation) """ 
 
-def _rag_init():
+def _rag_init() -> tuple[SentenceTransformer, list[str], list[str], faiss.IndexFlatL2]:
     # 임베딩 모델 로드, 영어 지원
     embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
     
