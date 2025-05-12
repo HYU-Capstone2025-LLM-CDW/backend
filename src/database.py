@@ -27,3 +27,12 @@ def get_db() -> Generator[Session, None, None]:
         raise
     finally:
         db.close()
+
+"""
+    내부 service (LOG) 는 기본적으로 router 계층이 없어서
+    fastapi 의존성 주입으로 작동하는 위의 코드 실행 불가로
+    아래의 코드를 만듬
+"""
+def get_db_internal() -> Session:
+    db = _SessionLocal()
+    return db
