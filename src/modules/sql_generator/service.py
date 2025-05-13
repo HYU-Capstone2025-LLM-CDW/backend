@@ -137,7 +137,7 @@ _embedding_model, _query_list, _sql_list, _query_index = _rag_init()
 
 # Query 와 유사했던 이전의 Query 와 그에 대한 SQL을 Example 로 보내는 함수, top_k개의 example 선정
 # sql_generator 의 service.py 에서만 실행하므로 private 함수로 설정
-def _add_relevant_query(query: str, top_k: int = 1) -> list[str]:
+def _add_relevant_query(query: str, top_k: int = 1, max_distance_threshold : float = 1.0) -> list[str]:
     
     if not _query_list or not _sql_list:
         return []
@@ -146,9 +146,13 @@ def _add_relevant_query(query: str, top_k: int = 1) -> list[str]:
     query_vector = _embedding_model.encode([query])
     distances, indices = _query_index.search(query_vector, top_k)
     
-    # 현재는 유사하다고 판단되는 example 을 top_k 만큼 보내는 형식
-    # 유사한 정도인 distance 는 사용하지 않고 있으나 추후 최소치 같은 방법으로 사용할 수도 있음.
-    return [(f"query : {_query_list[i]}, sql : {_sql_list[i]}") for i in indices[0]]
+    # max_distance_threshold 보다 낮은 경우에만 result 에 반영함
+    result = []
+    for dist, idx in zip(distances[0], indices[0]):
+        if dist <= max_distance_threshold:
+            result.append(f"query : {_query_list[idx]}, sql : {_sql_list[idx]}")
+            
+    return result
 
 # vector db 에 query 추가 및 (query, sql) 쌍 추가
 # 순서 유지 필수
