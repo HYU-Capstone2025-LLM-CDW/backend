@@ -12,3 +12,6 @@ __pycache__/
 .git
 .gitignore
 tests/
+query_example.md
+query_index.faiss
+sql_example.md
