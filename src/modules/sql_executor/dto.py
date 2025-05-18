@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from fastapi import HTTPException
 from pydantic import BaseModel, Field, field_validator
 
@@ -24,9 +24,9 @@ class SqlExecutorRequestDto(BaseModel):
             SQLSyntaxStructureValidator(value).validate()
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
-            
+        
         return value
     
 class SqlExecutorResponseDto(BaseModel):
-    data: Optional[dict] = Field(None, title="Data", description="The data returned from the OMOP DB")
+    data: Optional[Union[list, dict]] = Field(None, title="Data", description="The data returned from the OMOP DB")
     error: Optional[str] = Field(None, title="Error", description="The error message if an error occurred")

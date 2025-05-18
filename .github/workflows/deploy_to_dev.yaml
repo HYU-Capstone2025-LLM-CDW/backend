@@ -1,40 +1,22 @@
 name: Deploy to Dev
 
 on:
-  workflow_run:
-    workflows: ["Build and Push Docker Image"]
-    types:
-      - completed
+  push:
+    branches: [main]
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: self-hosted
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Create .env file
-        run: echo '${{ secrets.ENV_FILE }}' > ${{ secrets.DOCKER_IMAGE_NAME }}.env
+        run: echo '${{ secrets.ENV_FILE }}' > .env
 
-      - name: Stop and Remove Existing Container
-        run: |
-          CONTAINER_NAME=backend-app-container
-          docker stop $CONTAINER_NAME || true
-          docker rm $CONTAINER_NAME || true
+      - name: Docker Compose Up (local build)
+        run: docker compose --env-file .env up -d --build
 
-      - name: Delete Unused Docker Images
-        run: |
-          IMAGE=${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ secrets.DOCKER_TAG || 'latest' }}
-          docker rmi $IMAGE || true
-
-      - name: Pull and Run Container
-        run: |
-          IMAGE=${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:${{ secrets.DOCKER_TAG || 'latest' }}
-          CONTAINER_NAME=backend-app-container
-          
-          docker pull $IMAGE
-
-          docker run --env-file ${{ secrets.DOCKER_IMAGE_NAME }}.env \
-            -d --restart always --name $CONTAINER_NAME -p 8000:8000 $IMAGE
-
-      - name: Remove .env file
-        run: rm ${{ secrets.DOCKER_IMAGE_NAME }}.env
+      - name: Clean up unused images (optional)
+        run: docker image prune -af
