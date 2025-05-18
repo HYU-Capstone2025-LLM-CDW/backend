@@ -104,7 +104,17 @@ class BasicSQLValidator:
             raise ValueError("허용되지 않은 DDL 명령어(CREATE, DROP, ALTER, TRUNCATE)가 포함되어 있습니다.")
     
     def _validate_allowed_keywords(self):
+        """
+        select * 또는 select into 와 같은 허용되지 않은 키워드를 검사합니다.
         
-        for select_all in self.ast.find_all(exp.Select):
-            if select_all.name != "*":
-                raise ValueError(f"허용되지 않은 키워드 사용: {select_all.name}")
+        Raises:
+            ValueError : 허용되지 않은 select 형식 또는 키워드 사용 시 발생합니다.
+        """
+        for select in self.ast.find_all(exp.Select):
+            # select * 차단
+            if any(isinstance(projection, exp.Star) for projection in select.expressions):
+                raise ValueError("select *는 허용되지 않습니다.")
+            
+            # select into 차단
+            if select.args.get("into"):
+                raise ValueError("select into 구문은 허용되지 않습니다.")
