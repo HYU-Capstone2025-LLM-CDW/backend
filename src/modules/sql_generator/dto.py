@@ -14,7 +14,7 @@ class SqlGeneratorRequestDto(BaseModel):
     text: str = Field(..., title="Text to convert to SQL", description="The text to convert to SQL")
     
     # LOG 기록 용도 변수, __init__ 에 들어가지 않는다.
-    _input_received_timestamp: datetime = PrivateAttr(default_factory=datetime.utcnow)
+    _input_received_timestamp: datetime = PrivateAttr(default_factory=datetime.now)
     _pre_llm_filter_status : Optional[str] = PrivateAttr()
     _pre_llm_filter_reason : Optional[str] = PrivateAttr()
     _pre_llm_filter_complete_timestamp : datetime = PrivateAttr()
