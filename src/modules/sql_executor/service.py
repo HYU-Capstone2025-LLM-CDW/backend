@@ -42,7 +42,12 @@ async def execute(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
     
+"""
+    Data Masking Code
     
+    기본 str : ~~~ + index 
+    lamda : lamda 에서 지정한 대로, index 안 붙음
+""" 
 
 _MASKING_RULES = {
     "person_id" : "임시사람id_",
