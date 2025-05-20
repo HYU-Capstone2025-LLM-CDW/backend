@@ -42,6 +42,20 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
             error=content.get("error")
         )
         
+
+        if sqlGeneratorResponseDto.sql:
+            _add_query_to_vector(sqlGeneratorRequestDto.text, sqlGeneratorResponseDto.sql)
+        
+        
+        return sqlGeneratorResponseDto
+
+    except Exception as e:
+        print(f"Unexpected Error: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
+
+
+    finally:
         save_sql_generator_log(SqlGeneratorLogRequestModel(
             user_input_text = sqlGeneratorRequestDto.text,
             input_received_timestamp = sqlGeneratorRequestDto.input_received_timestamp,
@@ -59,18 +73,6 @@ def generate(sqlGeneratorRequestDto: SqlGeneratorRequestDto) -> SqlGeneratorResp
             
             llm_model_used = "GEMINI"
         ))
-
-        if sqlGeneratorResponseDto.sql:
-            _add_query_to_vector(sqlGeneratorRequestDto.text, sqlGeneratorResponseDto.sql)
-        
-        
-        return sqlGeneratorResponseDto
-
-    except Exception as e:
-        print(f"Unexpected Error: {e}")
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
-
 
 """ RAG(Retrieval-Augmented Generation) """ 
 
