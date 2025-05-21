@@ -51,4 +51,5 @@ EXPOSE 8000
 ENTRYPOINT ["/app/entrypoint.sh"]
 
 # 기본 CMD 설정 (entrypoint.sh의 exec "$@" 를 통해 실행됨)
+CMD ["alembic", "upgrade", "head"]
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

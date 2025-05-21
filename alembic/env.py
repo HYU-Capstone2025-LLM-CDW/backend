@@ -59,7 +59,7 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    database_url = os.getenv("DATABASE_URL")
+    database_url = os.getenv("POSTGRES_DB_URL")
     if database_url is None:
         raise ValueError("DATABASE_URL environment variable is not set")
     config.set_main_option("sqlalchemy.url", database_url)

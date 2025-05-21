@@ -5,10 +5,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base
 from typing import Generator
+from src.config import settings
 
 # SQLAlchemy 엔진 생성
 # connect_args는 필요에 따라 추가 (예: SSL 설정)
-_engine = create_engine(os.getenv("DATABASE_URL")) # .env에서 로드한 URL 사용
+_engine = create_engine(settings.postgres_db_url) # .env에서 로드한 URL 사용
 
 # 데이터베이스 세션 생성기
 _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)

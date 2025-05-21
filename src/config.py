@@ -9,9 +9,14 @@ class _Settings(BaseSettings):
     postgres_password: str
     postgres_db: str
     
-    database_url: str = ""
-    db_host: str
-    db_port: int
+    postgres_db_url: str = ""
+    postgres_db_host: str
+    postgres_db_port: int
+
+    mssql_db_host: str
+    mssql_db_user: str
+    mssql_db_password: str
+    mssql_db: str
     
     model_config = SettingsConfigDict(
         env_file=".env",

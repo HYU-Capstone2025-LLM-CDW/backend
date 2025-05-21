@@ -1,19 +1,18 @@
 services:
-  # PostgreSQL Database Service (using official image)
   postgres:
-    image: postgres:15 # 특정 버전 사용 권장 (예: 15 또는 16)
+    image: postgres:15
     container_name: postgres-container
+    env_file:
+      - .env
     environment:
-      # These variables are used by the official Postgres image
-      # to initialize the DB if it's empty
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - postgres_data:/var/lib/postgresql/data # Named volume for data persistence
-      - ./postgres-init:/docker-entrypoint-initdb.d # Custom initialization scripts
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d
     ports:
-      - "5433:5432" # Optional: Map host port for external access/debug
+      - "5433:5432"
     networks:
       - omop-network
     healthcheck:
@@ -21,22 +20,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s # Give some time for the DB to start before checking
+      start_period: 10s
 
-  # FastAPI Backend Service (using your modified Dockerfile)
+  # FastAPI Backend Service
   fastapi:
     build:
-      context: . # Build from the Dockerfile in the current directory
-      # dockerfile: Dockerfile # Explicitly specify if needed
+      context: .
     container_name: fastapi-container
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     environment:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
-      DATABASE_URL: ${DATABASE_URL}
-      # Pass individual components if needed by entrypoint script or alembic
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
+      DATABASE_URL: ${POSTGRES_DB_URL}
+      DB_HOST: ${POSTGRES_DB_HOST}
+      DB_PORT: ${POSTGRES_DB_PORT}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
@@ -44,11 +43,11 @@ services:
       - omop-network
     depends_on:
       postgres:
-        condition: service_healthy # Wait for db's healthcheck to pass
+        condition: service_healthy
 
 volumes:
-  postgres_data: # Define the named volume
+  postgres_data:
 
 networks:
-  omop-network: # Define the custom network
-    driver: bridge
+  omop-network:
+    external: true

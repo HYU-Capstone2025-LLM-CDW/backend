@@ -11,6 +11,5 @@ router = APIRouter(prefix="/sql-executor", tags=["Text to SQL"])
 @router.post("/")
 async def sql_executor(
     sqlExecutorRequestDto: SqlExecutorRequestDto,
-    db: Session = Depends(get_db)
 ) -> SqlExecutorResponseDto:
-    return await sql_executor_service.execute(sqlExecutorRequestDto, db)
+    return await sql_executor_service.execute(sqlExecutorRequestDto)

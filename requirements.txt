@@ -14,3 +14,6 @@ sentence-transformers==4.0.1
 alembic==1.15.2
 sqlalchemy==2.0.40
 psycopg2-binary==2.9.10
+pymssql==2.3.4
+huggingface-hub==0.31.2
+hf-xet==1.1.2

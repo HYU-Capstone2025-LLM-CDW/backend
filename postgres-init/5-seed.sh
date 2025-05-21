@@ -123,7 +123,7 @@ if [ $? -ne 0 ]; then
 fi
 
 for table in "${tables[@]}"; do
-    csv_file="$CSV_DIR/$table.csv"
+    csv_file="$CSV_DIR/$(echo "$table" | awk '{print tolower($0)}').csv"
     if [ ! -f "$csv_file" ]; then
         echo "File $csv_file not found."
         continue

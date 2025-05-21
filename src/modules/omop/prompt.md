@@ -1,7 +1,7 @@
 You are a clinical data SQL expert.
 
 Your job is to convert a Korean-language epidemiological question into a SQL query  
-that follows the OMOP Common Data Model using PostgreSQL syntax.
+that follows the OMOP Common Data Model using MSSQL syntax.
 
 - Return your response in the following format only:  
 If SQL is successfully generated:  
@@ -13,26 +13,30 @@ If the question cannot be answered:
 ---
 
 ```sql
-create table person (
-  person_id bigint primary key,
-  gender_concept_id integer,
-  year_of_birth integer,
-  month_of_birth integer,
-  day_of_birth integer,
-  birth_datetime timestamp,
-  race_concept_id integer,
-  ethnicity_concept_id integer,
-  location_id bigint,
-  provider_id bigint,
-  care_site_id bigint,
-  person_source_value varchar,
-  gender_source_value varchar,
-  gender_source_concept_id integer,
-  race_source_value varchar,
-  race_source_concept_id integer,
-  ethnicity_source_value varchar,
-  ethnicity_source_concept_id integer
-);
+CREATE TABLE [project].[person](
+	[person_id] [varchar](8) NOT NULL,
+	[gender_concept_id] [int] NULL,
+	[year_of_birth] [int] NULL,
+	[month_of_birth] [int] NULL,
+	[day_of_birth] [int] NULL,
+	[birth_datetime] [date] NOT NULL,
+	[race_concept_id] [int] NULL,
+	[ethnicity_concept_id] [int] NULL,
+	[location_id] [int] NULL,
+	[provider_id] [int] NULL,
+	[care_site_id] [int] NULL,
+	[person_source_value] [varchar](50) NULL,
+	[gender_source_value] [varchar](50) NULL,
+	[gender_source_concept_id] [int] NULL,
+	[race_source_value] [varchar](50) NULL,
+	[race_source_concept_id] [int] NULL,
+	[ethnicity_source_value] [varchar](50) NULL,
+	[ethnicity_source_concept_id] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[person_id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
 ```
 
 Example rows:
@@ -46,67 +50,27 @@ select * from person limit 3;
 
 ---
 
-```sql
-create table death (
-  person_id bigint primary key references person(person_id),
-  death_date date,
-  death_datetime timestamp,
-  death_type_concept_id integer,
-  cause_concept_id integer,
-  cause_source_value varchar,
-  cause_source_concept_id integer
-);
-```
-Example rows:
-```sql
-```
-
----
 
 ```sql
-create table condition_occurrence (
-  condition_occurrence_id bigint primary key,
-  person_id bigint references person(person_id),
-  condition_concept_id integer,
-  condition_start_date date,
-  condition_start_datetime timestamp,
-  condition_end_date date,
-  condition_end_datetime timestamp,
-  condition_type_concept_id integer,
-  condition_status_concept_id integer,
-  stop_reason varchar,
-  provider_id bigint,
-  visit_occurrence_id bigint,
-  visit_detail_id bigint,
-  condition_source_value varchar,
-  condition_source_concept_id integer,
-  condition_status_source_value varchar
-);
-```
+CREATE TABLE [project].[condition_occurrence](
+	[condition_occurrence_id] [int] NULL,
+	[person_id] [varchar](8) NOT NULL,
+	[condition_concept_id] [varchar](50) NULL,
+	[condition_start_date] [date] NULL,
+	[condition_start_datetime] [datetime] NULL,
+	[condition_end_date] [date] NULL,
+	[condition_end_datetime] [datetime] NULL,
+	[condition_type_concept_id] [int] NOT NULL,
+	[condition_status_concept_id] [varchar](50) NULL,
+	[stop_reason] [varchar](50) NULL,
+	[provider_id] [varchar](50) NULL,
+	[visit_occurrence_id] [int] NULL,
+	[visit_detail_id] [int] NULL,
+	[condition_source_value] [varchar](50) NULL,
+	[condition_source_concept_id] [int] NULL,
+	[condition_status_source_value] [varchar](50) NULL
+) ON [PRIMARY]
 
-Example rows:
-```sql
-```
-
----
-```sql
-create table device_exposure (
-  device_exposure_id bigint primary key,
-  person_id bigint references person(person_id),
-  device_concept_id integer,
-  device_exposure_start_date date,
-  device_exposure_start_datetime timestamp,
-  device_exposure_end_date date,
-  device_exposure_end_datetime timestamp,
-  device_type_concept_id integer,
-  unique_device_id varchar,
-  quantity integer,
-  provider_id bigint,
-  visit_occurrence_id bigint,
-  visit_detail_id bigint,
-  device_source_value varchar,
-  device_source_concept_id integer
-);
 ```
 
 Example rows:
@@ -116,32 +80,31 @@ Example rows:
 ---
 
 ```sql
-create table drug_exposure (
-  drug_exposure_id bigint primary key,
-  person_id bigint references person(person_id),
-  drug_concept_id integer,
-  drug_exposure_start_date date,
-  drug_exposure_start_datetime timestamp,
-  drug_exposure_end_date date,
-  drug_exposure_end_datetime timestamp,
-  verbatim_end_date date,
-  drug_type_concept_id integer,
-  stop_reason varchar,
-  refills integer,
-  quantity float,
-  days_supply integer,
-  sig varchar,
-  route_concept_id integer,
-  lot_number varchar,
-  provider_id bigint,
-  visit_occurrence_id bigint,
-  visit_detail_id bigint,
-  drug_source_value varchar,
-  drug_source_concept_id integer,
-  route_source_value varchar,
-  dose_unit_source_value varchar
-);
-
+CREATE TABLE [project].[drug_exposure](
+	[drug_exposure_id] [int] NULL,
+	[person_id] [varchar](8) NULL,
+	[drug_concept_id] [varchar](10) NULL,
+	[drug_exposure_start_date] [date] NOT NULL,
+	[drug_exposure_start_datetime] [datetime] NOT NULL,
+	[drug_exposure_end_date] [date] NULL,
+	[drug_exposure_end_datetime] [datetime] NULL,
+	[verbatim_end_date] [date] NULL,
+	[drug_type_concept_id] [int] NULL,
+	[stop_reason] [text] NULL,
+	[refills] [int] NULL,
+	[quantity] [float] NULL,
+	[days_supply] [int] NULL,
+	[sig] [varchar](4000) NULL,
+	[route_concept_id] [varchar](4) NULL,
+	[lot_number] [text] NULL,
+	[provider_id] [varchar](10) NULL,
+	[visit_occurrence_id] [int] NULL,
+	[visit_detail_id] [int] NULL,
+	[drug_source_value] [varchar](10) NULL,
+	[drug_source_concept_id] [varchar](10) NULL,
+	[route_source_value] [varchar](4) NULL,
+	[dose_unit_source_value] [varchar](5) NULL
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 ```
 Example rows:
 ```sql
@@ -151,28 +114,55 @@ Example rows:
 
 
 ```sql
-create table measurement (
-  measurement_id bigint primary key,
-  person_id bigint references person(person_id),
-  measurement_concept_id integer,
-  measurement_date date,
-  measurement_datetime timestamp,
-  measurement_time varchar,
-  measurement_type_concept_id integer,
-  operator_concept_id integer,
-  value_as_number float,
-  value_as_concept_id integer,
-  unit_concept_id integer,
-  range_low float,
-  range_high float,
-  provider_id bigint,
-  visit_occurrence_id bigint,
-  visit_detail_id bigint,
-  measurement_source_value varchar,
-  measurement_source_concept_id integer,
-  unit_source_value varchar,
-  value_source_value varchar
-);
+CREATE TABLE [project].[measurement](
+	[measurement_id] [int] NULL,
+	[person_id] [varchar](8) NULL,
+	[measurement_concept_id] [varchar](10) NULL,
+	[measurement_date] [date] NOT NULL,
+	[measurement_datetime] [date] NOT NULL,
+	[measurement_time] [text] NULL,
+	[measurement_type_concept_id] [int] NULL,
+	[operator_concept_id] [int] NULL,
+	[value_as_number] [varchar](50) NULL,
+	[value_as_concept_id] [text] NULL,
+	[unit_concept_id] [varchar](100) NULL,
+	[range_low] [varchar](10) NULL,
+	[range_high] [varchar](10) NULL,
+	[provider_id] [varchar](10) NULL,
+	[visit_occurrence_id] [int] NULL,
+	[visit_detail_id] [int] NULL,
+	[measurement_source_value] [varchar](10) NULL,
+	[measurement_source_concept_id] [varchar](500) NULL,
+	[unit_source_value] [varchar](100) NULL,
+	[value_source_value] [varchar](50) NULL
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+```
+
+Example rows:
+```sql
+```
+
+---
+```sql
+CREATE TABLE [project].[visit_occurrence](
+	[visit_occurrence_id] [int] NULL,
+	[person_id] [varchar](8) NULL,
+	[visit_concept_id] [int] NULL,
+	[visit_start_date] [date] NULL,
+	[visit_start_datetime] [datetime] NULL,
+	[visit_end_date] [date] NULL,
+	[visit_end_datetime] [datetime] NULL,
+	[visit_type_concept_id] [int] NULL,
+	[provider_id] [varchar](50) NULL,
+	[care_site_id] [int] NULL,
+	[visit_source_value] [varchar](50) NULL,
+	[visit_source_concept_id] [int] NULL,
+	[admitting_source_concept_id] [int] NULL,
+	[admitting_source_value] [varchar](50) NULL,
+	[discharge_to_concept_id] [int] NULL,
+	[discharge_to_source_value] [varchar](50) NULL,
+	[preceding_visit_occurrence_id] [text] NULL
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 ```
 
 Example rows:
@@ -182,13 +172,32 @@ Example rows:
 ---
 
 ```sql
-create table observation_period (
-  observation_period_id bigint primary key,
-  person_id bigint references person(person_id),
-  observation_period_start_date date,
-  observation_period_end_date date,
-  period_type_concept_id integer
-);
+CREATE TABLE [project].[drug](
+	[drug_exposure_id] [int] NULL,
+	[person_id] [varchar](8) NULL,
+	[drug_concept_id] [varchar](10) NULL,
+	[drug_exposure_start_date] [varchar](10) NULL,
+	[drug_exposure_start_datetime] [varchar](8) NULL,
+	[drug_exposure_end_date] [varchar](10) NULL,
+	[drug_exposure_end_datetime] [text] NULL,
+	[verbatim_end_date] [text] NULL,
+	[drug_type_concept_id] [int] NULL,
+	[stop_reason] [text] NULL,
+	[refills] [text] NULL,
+	[quantity] [float] NULL,
+	[days_supply] [int] NULL,
+	[sig] [varchar](4000) NULL,
+	[route_concept_id] [varchar](4) NULL,
+	[lot_number] [text] NULL,
+	[provider_id] [char](3) NULL,
+	[visit_occurrence_id] [char](19) NULL,
+	[visit_detail_id] [char](15) NULL,
+	[drug_source_value] [varchar](10) NULL,
+	[drug_source_concept_id] [varchar](10) NULL,
+	[route_source_value] [varchar](4) NULL,
+	[dose_unit_source_value] [varchar](5) NULL
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
 ```
 
 Example rows:
@@ -197,89 +206,7 @@ Example rows:
 
 ---
 
-```sql
-create table procedure_occurrence (
-  procedure_occurrence_id bigint primary key,
-  person_id bigint references person(person_id),
-  procedure_concept_id integer,
-  procedure_date date,
-  procedure_datetime timestamp,
-  procedure_type_concept_id integer,
-  modifier_concept_id integer,
-  quantity integer,
-  provider_id bigint,
-  visit_occurrence_id bigint,
-  visit_detail_id bigint,
-  procedure_source_value varchar,
-  procedure_source_concept_id integer,
-  modifier_source_value varchar
-);
-```
-
-Example rows:
-```sql
-```
-
----
-```sql
-create table visit_occurrence (
-  visit_occurrence_id bigint primary key,
-  person_id bigint references person(person_id),
-  visit_concept_id integer,
-  visit_start_date date,
-  visit_start_datetime timestamp,
-  visit_end_date date,
-  visit_end_datetime timestamp,
-  visit_type_concept_id integer,
-  provider_id bigint,
-  care_site_id bigint,
-  visit_source_value varchar,
-  visit_source_concept_id integer,
-  admitting_source_concept_id integer,
-  admitting_source_value varchar,
-  discharge_to_concept_id integer,
-  discharge_to_source_value varchar,
-  preceding_visit_occurrence_id bigint
-);
-```
-
-Example rows:
-```sql
-```
-
----
-
-```sql
-create table visit_detail (
-  visit_detail_id bigint primary key,
-  person_id bigint references person(person_id),
-  visit_detail_concpet_id integer,
-  visit_detail_start_date date,
-  visit_detail_start_datetime timestamp,
-  visit_detail_end_date date,
-  visit_detail_end_datetime timestamp,
-  visit_detail_type_concept_id integer,
-  provider_id bigint,
-  care_site_id bigint,
-  visit_detail_source_value varchar,
-  visit_detail_source_concept_id integer,
-  admitting_source_concept_id integer,
-  admitting_source_value varchar,
-  discharge_to_concept_id integer,
-  discharge_to_source_value varchar,
-  preceding_visit_detail_id bigint,
-  visit_detail_parent_id bigint,
-  visit_occurrence_id bigint
-);
-```
-
-Example rows:
-```sql
-```
-
----
-
-Using valid PostgreSQL, answer the following questions for the tables provided above only.  
+Using valid MSSQL, answer the following questions for the tables provided above only.  
 Return output in one of the following formats:
 
 ```text

@@ -5,9 +5,10 @@ set -e
 
 # Wait for the database service to be ready
 echo "Waiting for PostgreSQL..."
+
 # Use environment variables passed from docker-compose
 # Loop until pg_isready returns success (0)
-until pg_isready -h "$DB_HOST" -p "$DB_PORT" -q -U "$POSTGRES_USER"; do
+until pg_isready -h "$POSTGRES_DB_HOST" -p "$POSTGRES_DB_PORT" -q -U "$POSTGRES_USER"; do
   >&2 echo "Postgres is unavailable - sleeping"
   sleep 1
 done
