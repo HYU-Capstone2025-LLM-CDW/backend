@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from src.modules.auth.dto import UserCreateRequestDto, UserLoginRequestDto, UserCreateResonseDto
 from src.modules.auth.model import User
+from src.database import get_db_internal
 from passlib.context import CryptContext
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
@@ -8,14 +9,14 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, Depends, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import traceback
 
 # hashing password
 _pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+_bearer_scheme = HTTPBearer()
 
 # JWT Config
 _SECRET_KEY = "temp"
@@ -41,20 +42,22 @@ def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, _SECRET_KEY, algorithm=_ALGORITHM)
 
-
-def get_current_user(token: str = Depends(_oauth2_scheme)) -> dict:
+# 현재 Login 한 user 받아오기
+# 로그인 필요한 router 에 붙일 것
+def get_current_user(token: HTTPAuthorizationCredentials = Depends(_bearer_scheme)) -> dict:
     try :
-        payload = jwt.decode(token, _SECRET_KEY, algorithms=[_ALGORITHM])
+        payload = jwt.decode(token.credentials, _SECRET_KEY, algorithms=[_ALGORITHM])
         return payload
     
     except JWTError:
         raise HTTPException(status_code=401, detail="Could not validate credentials.")
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
+        print(e)
+        raise HTTPException(status_code=500, detail="An unexpected server error occurred during get current user.")
 
 # 관리자 검증 함수
-def get_current_admin_user(token : str = Depends(_oauth2_scheme)) -> dict:
+def get_current_admin_user(token : str = Depends(_bearer_scheme)) -> dict:
     try : 
         user = get_current_user(token)
         role = user.get("role")
@@ -62,9 +65,14 @@ def get_current_admin_user(token : str = Depends(_oauth2_scheme)) -> dict:
         if role not in ("admin"):
             raise HTTPException(status_code=403, detail="Admin access required")
         return user
-
+    
+    
+    except HTTPException as h:
+        raise h
+    
     except Exception as e:
-        raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
+        print(e)
+        raise HTTPException(status_code=500, detail="An unexpected server error occurred in check admin user.")
 
 
 # signup
@@ -104,6 +112,7 @@ def create_user(userCreateRequestDto : UserCreateRequestDto,  db : Session) -> U
     
     
 # Login 기능
+# Swagger 로 test 시 token 받아서 그대로 넣기
 def login_user(userLoginRequestDto : UserLoginRequestDto, db : Session) -> str:
     try :
         user : User = db.query(User).filter(User.employee_id == userLoginRequestDto.employee_id).first()
@@ -122,17 +131,11 @@ def login_user(userLoginRequestDto : UserLoginRequestDto, db : Session) -> str:
         
         token = create_access_token(token_data)
         return token
-        
-    
-    except SQLAlchemyError as db_err:
-        db.rollback()
-        print(f"Database Error: {db_err}")
+    except HTTPException as h:
         traceback.print_exc()
-        raise HTTPException(status_code=400, detail="An error occurred while executing the SQL query.")
-
+        raise h
+    
     except Exception as e:
-        db.rollback()
-        print(f"Unexpected Error: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
 
@@ -158,3 +161,25 @@ def approve_user(user_id : int, db : Session) -> User:
         print(f"Unexpected Error: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
+    
+def add_admin_user():
+    db = get_db_internal()
+    
+    try :
+        admin_user = User(
+            employee_id="admin",
+            password=hash_password("password"),  # 반드시 암호화
+            is_approved=True,
+            role="admin"
+        )
+        
+        db.add(admin_user)
+        db.commit()
+        db.refresh(admin_user)
+        db.close()
+    
+    except Exception as e:
+        db.rollback()
+        print("관리자 계정 생성 중 오류 발생")
+        
+add_admin_user()

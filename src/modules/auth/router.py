@@ -11,13 +11,13 @@ router = APIRouter(prefix="/auth", tags=["Text to SQL"])
 def signup(userCreateRequestDto : UserCreateRequestDto, db : Session = Depends(get_db)) -> UserCreateResonseDto:
     return create_user(userCreateRequestDto, db)
 
-@router.post("/login")
+@router.post("/login", response_model=UserLoginResonseDto)
 def login(userLoginRequestDto : UserLoginRequestDto,  db : Session = Depends(get_db)) -> UserLoginResonseDto:
     token = login_user(userLoginRequestDto, db)
-    return UserLoginResonseDto(access_token = token, token_type = " bearer")
+    return UserLoginResonseDto(access_token = token, token_type = "Bearer")
 
 # 추후 dto 로 변경
 
 @router.post("/approve/{user_id}")
-def approve(user_id : int, db: Session = Depends(get_db), _: dict = Depends(get_current_admin_user)):
-    user = approve_user(user_id, db)
+def approve(user_id : int, db: Session = Depends(get_db), user: dict = Depends(get_current_admin_user)):
+    approved_user = approve_user(user_id, db)

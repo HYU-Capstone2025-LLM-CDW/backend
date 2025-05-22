@@ -23,18 +23,18 @@ class UserLoginRequestDto(BaseModel):
     employee_id : str
     password : str
 
-class UserOutResponseDto(BaseModel):
-    id : int
-    employee_id : str
-    is_approved: bool
-    role : str
+# class UserOutResponseDto(BaseModel):
+#     id : int
+#     employee_id : str
+#     is_approved: bool
+#     role : str
     
-    class Config:
-        orm_mode = True
+#     class Config:
+#         orm_mode = True
         
 class UserCreateResonseDto(BaseModel):
-    access_token: str
-    token_type : str
+    text : str
 
 class UserLoginResonseDto(BaseModel):
-    text : str
+    access_token: str
+    token_type : str
