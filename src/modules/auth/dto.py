@@ -23,18 +23,34 @@ class UserLoginRequestDto(BaseModel):
     employee_id : str
     password : str
 
-# class UserOutResponseDto(BaseModel):
-#     id : int
-#     employee_id : str
-#     is_approved: bool
-#     role : str
+class UserApproveRequestDto(BaseModel):
+    employee_id : str
+
+class UserDeleteRequestDto(BaseModel):
+    employee_id : str
+
+
+class UserOutResponseDto(BaseModel):
+    id : int
+    employee_id : str
+    is_approved: bool
+    role : str
     
-#     class Config:
-#         orm_mode = True
-        
+    class Config:
+        from_attributes = True 
+
+
+
+
 class UserCreateResonseDto(BaseModel):
     text : str
 
 class UserLoginResonseDto(BaseModel):
     access_token: str
     token_type : str
+    
+class UserApproveResponseDto(BaseModel):
+    text : str
+    
+class UserDeleteResponseDto(BaseModel):
+    text : str

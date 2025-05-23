@@ -2,10 +2,18 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from src.database import get_db
 
-from src.modules.auth.dto import UserCreateRequestDto, UserCreateResonseDto, UserLoginRequestDto, UserLoginResonseDto
-from src.modules.auth.service import create_user, login_user, get_current_admin_user, approve_user
+from src.modules.auth.dto import *
+from src.modules.auth.service import create_user, login_user, get_current_admin_user, approve_user, get_unapproved_user, delete_user
 
 router = APIRouter(prefix="/auth", tags=["Text to SQL"])
+
+# GET
+
+@router.get("/unapproved", response_model=list[UserOutResponseDto])
+def get_unapproved(db: Session = Depends(get_db), user: dict = Depends(get_current_admin_user)) -> list[UserOutResponseDto]:
+    return get_unapproved_user(db)
+
+# POST
 
 @router.post("/signup")
 def signup(userCreateRequestDto : UserCreateRequestDto, db : Session = Depends(get_db)) -> UserCreateResonseDto:
@@ -16,8 +24,14 @@ def login(userLoginRequestDto : UserLoginRequestDto,  db : Session = Depends(get
     token = login_user(userLoginRequestDto, db)
     return UserLoginResonseDto(access_token = token, token_type = "Bearer")
 
-# 추후 dto 로 변경
 
-@router.post("/approve/{user_id}")
-def approve(user_id : int, db: Session = Depends(get_db), user: dict = Depends(get_current_admin_user)):
-    approved_user = approve_user(user_id, db)
+@router.post("/approve", response_model=UserApproveResponseDto)
+def approve(userApproveRequestDto : UserApproveRequestDto, db: Session = Depends(get_db), user: dict = Depends(get_current_admin_user)) -> UserApproveResponseDto:
+    return approve_user(userApproveRequestDto, db)
+
+
+# DELETE
+
+@router.delete("/user", response_model=UserDeleteResponseDto)
+def delete(userDeleteRequestDto : UserDeleteRequestDto, db : Session = Depends(get_db), user: dict = Depends(get_current_admin_user)) -> UserDeleteResponseDto:
+    return delete_user(userDeleteRequestDto, db)

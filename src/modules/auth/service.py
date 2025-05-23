@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
-from src.modules.auth.dto import UserCreateRequestDto, UserLoginRequestDto, UserCreateResonseDto
+from src.modules.auth.dto import *
 from src.modules.auth.model import User
 from src.database import get_db_internal
 from passlib.context import CryptContext
 from jose import jwt, JWTError
 from datetime import datetime, timedelta, timezone
-
+from typing import List
 
 from sqlalchemy.exc import SQLAlchemyError
 from fastapi import HTTPException, Depends, status
@@ -31,6 +31,7 @@ def verify_password(plain: str, hashed : str) -> bool:
     return _pwd_context.verify(plain, hashed)
 
 # jwt token
+# 추후에 refresh token 도입 필요성
 def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     to_encode = data.copy()
     
@@ -43,7 +44,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None) -> str:
     return jwt.encode(to_encode, _SECRET_KEY, algorithm=_ALGORITHM)
 
 # 현재 Login 한 user 받아오기
-# 로그인 필요한 router 에 붙일 것
+# Login 한 User 만 호출할 수 있는 API 일시 이 함수 router 매개변수로 넣을 것
 def get_current_user(token: HTTPAuthorizationCredentials = Depends(_bearer_scheme)) -> dict:
     try :
         payload = jwt.decode(token.credentials, _SECRET_KEY, algorithms=[_ALGORITHM])
@@ -57,6 +58,7 @@ def get_current_user(token: HTTPAuthorizationCredentials = Depends(_bearer_schem
         raise HTTPException(status_code=500, detail="An unexpected server error occurred during get current user.")
 
 # 관리자 검증 함수
+# 관리자만 호출 가능한 API 일시 이 함수 router 에 매개변수로 넣을 것
 def get_current_admin_user(token : str = Depends(_bearer_scheme)) -> dict:
     try : 
         user = get_current_user(token)
@@ -75,7 +77,7 @@ def get_current_admin_user(token : str = Depends(_bearer_scheme)) -> dict:
         raise HTTPException(status_code=500, detail="An unexpected server error occurred in check admin user.")
 
 
-# signup
+# 회원 가입 함수
 def create_user(userCreateRequestDto : UserCreateRequestDto,  db : Session) -> UserCreateResonseDto:
     try :
         # 이미 존재하는 지 확인
@@ -96,8 +98,11 @@ def create_user(userCreateRequestDto : UserCreateRequestDto,  db : Session) -> U
         db.commit()
         db.refresh(db_user)
         
-        return UserCreateResonseDto(text= "회원가입 성공")
-        
+        return UserCreateResonseDto(text= "회원가입 요청 성공")
+    
+    except HTTPException as h:
+        raise h
+    
     except SQLAlchemyError as db_err:
         db.rollback()
         print(f"Database Error: {db_err}")
@@ -111,7 +116,7 @@ def create_user(userCreateRequestDto : UserCreateRequestDto,  db : Session) -> U
         raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
     
     
-# Login 기능
+# Login 함수
 # Swagger 로 test 시 token 받아서 그대로 넣기
 def login_user(userLoginRequestDto : UserLoginRequestDto, db : Session) -> str:
     try :
@@ -128,9 +133,9 @@ def login_user(userLoginRequestDto : UserLoginRequestDto, db : Session) -> str:
             "role" : user.role
         }
         
-        
         token = create_access_token(token_data)
         return token
+    
     except HTTPException as h:
         traceback.print_exc()
         raise h
@@ -140,15 +145,19 @@ def login_user(userLoginRequestDto : UserLoginRequestDto, db : Session) -> str:
         raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
 
 # 관리자의 user 승인
-def approve_user(user_id : int, db : Session) -> User:
+def approve_user(userApproveRequestDto : UserApproveRequestDto, db : Session) -> UserApproveResponseDto:
     try : 
-        user = db.query(User).filter(User.id == user_id).first()
+        user = db.query(User).filter(User.employee_id == userApproveRequestDto.employee_id).first()
         
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         user.is_approved = True
         db.commit()
         
+        return UserApproveResponseDto(text= "approve success")
+    
+    except HTTPException as h:
+        raise h
 
     except SQLAlchemyError as db_err:
         db.rollback()
@@ -161,7 +170,41 @@ def approve_user(user_id : int, db : Session) -> User:
         print(f"Unexpected Error: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
-    
+
+# 관리자의 유저 삭제
+def delete_user(userDeleteRequestDto : UserDeleteRequestDto , db : Session) -> UserDeleteResponseDto:
+    try:
+        user = db.query(User).filter(User.employee_id == userDeleteRequestDto.employee_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        db.delete(user)
+        db.commit()
+        return UserDeleteResponseDto(text="Delete Success")
+
+    except HTTPException as h:
+        raise h
+
+    except SQLAlchemyError as db_err:
+        db.rollback()
+        print(f"Database Error: {db_err}")
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail="An error occurred while executing the SQL query.")
+
+    except Exception as e:
+        db.rollback()
+        print(f"Unexpected Error: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
+
+# 관리자의 유저 조회 (비승인)
+def get_unapproved_user(db : Session) -> List[User]:
+    unapproved_users = db.query(User).filter(User.is_approved == False).all()
+    return unapproved_users
+
+
+# admin 계정 만드는 코드
+# 임시 코드
 def add_admin_user():
     db = get_db_internal()
     
@@ -182,4 +225,4 @@ def add_admin_user():
         db.rollback()
         print("관리자 계정 생성 중 오류 발생")
         
-add_admin_user()
+# add_admin_user()
