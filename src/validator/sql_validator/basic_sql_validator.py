@@ -1,13 +1,7 @@
 from sqlglot import parse_one, exp
 from typing import Dict, Set
 
-# 허용된 테이블 및 컬럼 (테스트용 예시 스키마)
-ALLOWED_SCHEMA: Dict[str, Set[str]] = {
-    "person": {"person_id", "gender_concept_id", "year_of_birth"},
-    "visit_occurrence": {"visit_occurrence_id", "person_id", "visit_concept_id"},
-    "condition_occurrence": {"condition_occurrence_id", "person_id", "condition_concept_id"},
-}
-
+from src.modules.omop.service import get_allowed_schema
 
 class BasicSQLValidator:
     """
@@ -25,6 +19,7 @@ class BasicSQLValidator:
     
     def __init__(self, sql: str):
         self.sql = sql
+        self.allowed_schema = get_allowed_schema()  # 허용된 스키마 목록
         
     def validate(self):
         """
@@ -52,7 +47,7 @@ class BasicSQLValidator:
             ValueError: 허용되지 않은 테이블이 포함된 경우 발생합니다.
         """
         used_tables = {table.name for table in self.ast.find_all(exp.Table)}
-        invalid_tables = used_tables - ALLOWED_SCHEMA.keys()
+        invalid_tables = used_tables - self.allowed_schema.keys()
 
         if invalid_tables:
             raise ValueError(f"허용되지 않은 테이블 사용: {', '.join(invalid_tables)}")
@@ -72,11 +67,11 @@ class BasicSQLValidator:
 
             if table:
                 # table.column 형태
-                if table not in ALLOWED_SCHEMA or column not in ALLOWED_SCHEMA[table]:
+                if table not in self.allowed_schema or column not in self.allowed_schema[table]:
                     invalid_columns.add(f"{table}.{column}")
             else:
                 # 컬럼 이름만 있는 경우 > 모든 테이블에 대해 검사
-                found = any(column in cols for cols in ALLOWED_SCHEMA.values())
+                found = any(column in cols for cols in self.allowed_schema.values())
                 if not found:
                     invalid_columns.add(column)
 
@@ -109,7 +104,17 @@ class BasicSQLValidator:
             raise ValueError("허용되지 않은 DDL 명령어(CREATE, DROP, ALTER, TRUNCATE)가 포함되어 있습니다.")
     
     def _validate_allowed_keywords(self):
+        """
+        select * 또는 select into 와 같은 허용되지 않은 키워드를 검사합니다.
         
-        for select_all in self.ast.find_all(exp.Select):
-            if select_all.name != "*":
-                raise ValueError(f"허용되지 않은 키워드 사용: {select_all.name}")
+        Raises:
+            ValueError : 허용되지 않은 select 형식 또는 키워드 사용 시 발생합니다.
+        """
+        for select in self.ast.find_all(exp.Select):
+            # select * 차단
+            if any(isinstance(projection, exp.Star) for projection in select.expressions):
+                raise ValueError("select *는 허용되지 않습니다.")
+            
+            # select into 차단
+            if select.args.get("into"):
+                raise ValueError("select into 구문은 허용되지 않습니다.")
