@@ -82,7 +82,7 @@ def create_user(userCreateRequestDto : UserCreateRequestDto,  db : Session) -> U
     try :
         # 이미 존재하는 지 확인
         existing = db.query(User).filter(
-            (User.employee_id == userCreateRequestDto.employee_id)
+            (User.email == userCreateRequestDto.email)
             ).first()
 
         # 아래 except 에서 안 잡힘
@@ -90,8 +90,9 @@ def create_user(userCreateRequestDto : UserCreateRequestDto,  db : Session) -> U
             raise HTTPException(status_code=400, detail="User already exists")
         
         db_user = User(
-            employee_id = userCreateRequestDto.employee_id,
-            password = hash_password(userCreateRequestDto.password)
+            email = userCreateRequestDto.email,
+            employee_number = userCreateRequestDto.employee_number,
+            password_hash = hash_password(userCreateRequestDto.password)
         )
         
         db.add(db_user)
@@ -120,16 +121,16 @@ def create_user(userCreateRequestDto : UserCreateRequestDto,  db : Session) -> U
 # Swagger 로 test 시 token 받아서 그대로 넣기
 def login_user(userLoginRequestDto : UserLoginRequestDto, db : Session) -> str:
     try :
-        user : User = db.query(User).filter(User.employee_id == userLoginRequestDto.employee_id).first()
+        user : User = db.query(User).filter(User.email == userLoginRequestDto.email).first()
     
-        if not user or not verify_password(userLoginRequestDto.password, user.password):
+        if not user or not verify_password(userLoginRequestDto.password_hash, user.password_hash):
             raise HTTPException(status_code=400, detail="Invalid email or password")
         
-        if not user.is_approved:
+        if not user.status == 'APPROVED':
             raise HTTPException(status_code=403, detail="User not approved by admin yet.")
         
         token_data = {
-            "sub" : user.employee_id,
+            "sub" : user.email,
             "role" : user.role
         }
         
@@ -147,11 +148,11 @@ def login_user(userLoginRequestDto : UserLoginRequestDto, db : Session) -> str:
 # 관리자의 user 승인
 def approve_user(userApproveRequestDto : UserApproveRequestDto, db : Session) -> UserApproveResponseDto:
     try : 
-        user = db.query(User).filter(User.employee_id == userApproveRequestDto.employee_id).first()
+        user = db.query(User).filter(User.email == userApproveRequestDto.email).first()
         
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        user.is_approved = True
+        user.status = 'APPROVED'
         db.commit()
         
         return UserApproveResponseDto(text= "approve success")
@@ -174,7 +175,7 @@ def approve_user(userApproveRequestDto : UserApproveRequestDto, db : Session) ->
 # 관리자의 유저 삭제
 def delete_user(userDeleteRequestDto : UserDeleteRequestDto , db : Session) -> UserDeleteResponseDto:
     try:
-        user = db.query(User).filter(User.employee_id == userDeleteRequestDto.employee_id).first()
+        user = db.query(User).filter(User.email == userDeleteRequestDto.email).first()
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         
@@ -199,7 +200,7 @@ def delete_user(userDeleteRequestDto : UserDeleteRequestDto , db : Session) -> U
 
 # 관리자의 유저 조회 (비승인)
 def get_unapproved_user(db : Session) -> List[User]:
-    unapproved_users = db.query(User).filter(User.is_approved == False).all()
+    unapproved_users = db.query(User).filter(User.status == "PENDING").all()
     return unapproved_users
 
 
@@ -210,9 +211,10 @@ def add_admin_user():
     
     try :
         admin_user = User(
-            employee_id="admin",
-            password=hash_password("password"),  # 반드시 암호화
-            is_approved=True,
+            email ="admin",
+            employee_number="admin",
+            password_hash=hash_password("password"),  # 반드시 암호화
+            status="APPROVED",
             role="admin"
         )
         

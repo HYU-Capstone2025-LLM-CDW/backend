@@ -2,7 +2,8 @@ from pydantic import BaseModel, field_validator, EmailStr
 from pydantic_core.core_schema import FieldValidationInfo
 
 class UserCreateRequestDto(BaseModel):
-    employee_id: str
+    employee_number: str
+    email : str
     password: str
     password_verification : str
     
@@ -20,20 +21,21 @@ class UserCreateRequestDto(BaseModel):
     
     
 class UserLoginRequestDto(BaseModel):
-    employee_id : str
-    password : str
+    email : str
+    password_hash : str
 
 class UserApproveRequestDto(BaseModel):
-    employee_id : str
+    email : str
 
 class UserDeleteRequestDto(BaseModel):
-    employee_id : str
+    email : str
 
 
 class UserOutResponseDto(BaseModel):
     id : int
-    employee_id : str
-    is_approved: bool
+    employee_number : str
+    email : str
+    status: str
     role : str
     
     class Config:
