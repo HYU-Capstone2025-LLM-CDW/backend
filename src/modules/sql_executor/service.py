@@ -18,7 +18,10 @@ async def execute(
         result = db.execute(text(user_sql))
         if result.returns_rows:
             rows = result.fetchall()
-            processed_data = [dict(row._mapping) for row in rows]
+            processed_data = [
+                _apply_masking(dict(row._mapping), idx + 1) 
+                for idx, row in enumerate(rows)
+            ]
             return SqlExecutorResponseDto(data=processed_data, error=None)
         else:
             db.commit()
@@ -38,3 +41,47 @@ async def execute(
         print(f"Unexpected Error: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="An unexpected server error occurred.")
+    
+"""
+    Data Masking Code
+    
+    기본 str : ~~~ + index 
+    lamda : lamda 에서 지정한 대로, index 안 붙음
+""" 
+
+# 주로 person table 에서 적용
+# 그냥 str 일시 + idx 추가, lamda(function) 일시 함수에서 지정한 대로 Masking 진행함
+_MASKING_RULES = {
+    "person_id" : "사람id",
+    "year_of_birth" : "탄생년도",
+    "month_of_birth" : "탄생월",
+    "day_of_birth" : "탄생일",
+    "birth_datetime" : "탄생시간",
+    "location_id" : "지역",
+    "provider_id" : "의사",
+    "care_site_id" : "병원",
+    "person_source_value" : "사람",
+    "gender_source_value" : lambda g : "마스킹",
+    "gender_concept_id" : lambda g : "마스킹",
+    "race_source_value" : lambda g : "마스킹",
+    "race_concept_id" : lambda g : "마스킹",
+    "ethnicity_source_value" : "인종",
+    "ethnicity_concept_id" : "민족",
+}
+
+def _apply_masking(row_dict : dict , row_index : int) -> dict:
+    masked = {}
+    for key, value in row_dict.items():
+        if key in _MASKING_RULES:
+            rule = _MASKING_RULES[key]
+            
+            # rule 이 함수 일시, 함수에 따름
+            if callable(rule):
+                masked[key] = rule(value)
+                
+            # rule 이 그냥 str 등일시 rule + index 로 masking
+            else:
+                masked[key] = f"{rule}{row_index}"
+        else:
+            masked[key] = value
+    return masked
