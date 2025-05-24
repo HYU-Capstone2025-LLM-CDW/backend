@@ -69,7 +69,6 @@ _MASKING_RULES = {
     "ethnicity_concept_id" : "민족",
 }
 
-# Data 를 너무 많이 뽑을 시 느려짐 (limit 없이 그냥 했을 떄)
 def _apply_masking(row_dict : dict , row_index : int) -> dict:
     masked = {}
     for key, value in row_dict.items():
