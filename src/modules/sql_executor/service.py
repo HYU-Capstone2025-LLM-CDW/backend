@@ -49,12 +49,27 @@ async def execute(
     lamda : lamda 에서 지정한 대로, index 안 붙음
 """ 
 
+# 주로 person table 에서 적용
+# 그냥 str 일시 + idx 추가, lamda(function) 일시 함수에서 지정한 대로 Masking 진행함
 _MASKING_RULES = {
-    "person_id" : "임시사람id_",
+    "person_id" : "사람id",
+    "year_of_birth" : "탄생년도",
+    "month_of_birth" : "탄생월",
+    "day_of_birth" : "탄생일",
+    "birth_datetime" : "탄생시간",
+    "location_id" : "지역",
+    "provider_id" : "의사",
+    "care_site_id" : "병원",
+    "person_source_value" : "사람",
+    "gender_source_value" : lambda g : "마스킹",
     "gender_concept_id" : lambda g : "마스킹",
+    "race_source_value" : lambda g : "마스킹",
     "race_concept_id" : lambda g : "마스킹",
+    "ethnicity_source_value" : "인종",
+    "ethnicity_concept_id" : "민족",
 }
 
+# Data 를 너무 많이 뽑을 시 느려짐 (limit 없이 그냥 했을 떄)
 def _apply_masking(row_dict : dict , row_index : int) -> dict:
     masked = {}
     for key, value in row_dict.items():
